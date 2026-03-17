@@ -1,0 +1,2831 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>kh.capital</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+/* ════════════════════════════════════════════════════
+   RANG SISTEMASI
+════════════════════════════════════════════════════ */
+:root {
+  --bg:    #080808; --bg2: #0f0f0f; --bg3: #141414; --bg4: #1c1c1c;
+  --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.13);
+  --gold: #c9a84c; --gold2: #e2c472; --gold-dim: rgba(201,168,76,0.10);
+  --white: #f0ece4; --muted: #777; --muted2: #999;
+  --green: #00d4aa; --red: #ff4d6d; --amber: #f5c842; --blue: #4d9fff;
+  --mono: 'DM Mono', monospace; --serif: 'Cormorant Garamond', Georgia, serif;
+  --r: 12px;
+  --sidebar: 240px;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body {
+  width:100%; height:100%;
+  background:#030303;
+  font-family:var(--mono);
+  color:var(--white);
+}
+
+/* ════════════════════════════════════════════════════
+   UMUMIY
+════════════════════════════════════════════════════ */
+.serif  { font-family:var(--serif); }
+.lbl    { font-size:0.58rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); }
+.card   { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r); }
+.tag    { font-size:0.58rem; letter-spacing:0.05em; padding:2px 8px; border-radius:4px; }
+.tag-long  { background:rgba(0,212,170,0.1);  color:var(--green); }
+.tag-short { background:rgba(255,77,109,0.1); color:var(--red); }
+.tag-spot  { background:rgba(201,168,76,0.1); color:var(--gold); }
+.up   { color:var(--green) !important; }
+.dn   { color:var(--red)   !important; }
+.gold { color:var(--gold)  !important; }
+.live { display:inline-flex; align-items:center; gap:5px; font-size:0.58rem; color:var(--green); }
+.live::before { content:''; width:5px; height:5px; border-radius:50%; background:var(--green); animation:pulse 1.6s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.2} }
+.divider { height:1px; background:var(--border); margin:0 18px; }
+.verified { color:var(--gold); font-size:0.65rem; }
+.actype      { font-size:0.55rem; padding:1px 5px; border-radius:3px; font-weight:500; letter-spacing:0.06em; vertical-align:middle; }
+.actype.real { background:rgba(0,212,170,0.1);  color:var(--green); border:1px solid rgba(0,212,170,0.2); }
+.actype.demo { background:rgba(245,200,66,0.1); color:var(--amber); border:1px solid rgba(245,200,66,0.2); }
+.btn-g       { padding:11px 20px; background:var(--gold); color:#050505; border:none; border-radius:9px; font-family:var(--mono); font-size:0.75rem; font-weight:500; cursor:pointer; letter-spacing:0.04em; transition:all .2s; }
+.btn-g:active, .btn-g:hover { background:var(--gold2); }
+.btn-ghost   { padding:11px 16px; background:transparent; border:1px solid var(--border2); border-radius:9px; font-family:var(--mono); font-size:0.72rem; color:var(--muted2); cursor:pointer; }
+.btn-outline { flex:1; padding:11px; background:transparent; border:1px solid var(--border2); border-radius:9px; font-family:var(--mono); font-size:0.72rem; color:var(--muted2); cursor:pointer; }
+.skeleton    { background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:6px; }
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* ════════════════════════════════════════════════════
+   LOADING
+════════════════════════════════════════════════════ */
+#loading {
+  position:fixed; inset:0; background:var(--bg);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  z-index:9999; transition:opacity .5s;
+}
+.load-brand      { font-family:var(--serif); font-size:2.4rem; font-weight:300; letter-spacing:0.2em; color:var(--white); margin-bottom:8px; }
+.load-brand span { color:var(--gold); }
+.load-sub        { font-size:0.6rem; letter-spacing:0.2em; color:var(--muted); margin-bottom:36px; }
+.load-bar        { width:90px; height:1px; background:var(--border2); overflow:hidden; }
+.load-bar::after { content:''; display:block; height:100%; background:var(--gold); animation:lb 1.6s ease forwards; }
+@keyframes lb { from{width:0} to{width:100%} }
+
+/* ════════════════════════════════════════════════════
+   LOGIN SAHIFASI
+════════════════════════════════════════════════════ */
+#loginPage {
+  position:fixed; inset:0; background:var(--bg);
+  display:none; align-items:center; justify-content:center;
+  z-index:9998; overflow-y:auto;
+}
+.login-wrap      { width:100%; max-width:420px; padding:24px 20px; display:flex; flex-direction:column; align-items:center; }
+.login-topbar    { width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:32px; }
+.lang-switcher   { display:flex; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:3px; gap:2px; }
+.ls-btn          { padding:5px 10px; background:transparent; border:none; border-radius:6px; font-family:var(--mono); font-size:0.65rem; color:var(--muted); cursor:pointer; transition:all .15s; }
+.ls-btn.active   { background:var(--bg2); color:var(--gold); border:1px solid var(--border2); }
+.login-brand     { font-family:var(--serif); font-size:2.8rem; font-weight:300; letter-spacing:0.2em; color:var(--white); margin-bottom:6px; text-align:center; }
+.login-brand span { color:var(--gold); }
+.login-tagline   { font-size:0.62rem; letter-spacing:0.18em; color:var(--muted); margin-bottom:32px; text-align:center; }
+.login-card      { width:100%; background:var(--bg2); border:1px solid var(--border2); border-radius:20px; padding:28px 24px; }
+.login-tabs      { display:flex; background:var(--bg3); border-radius:8px; padding:3px; margin-bottom:22px; }
+.ltab            { flex:1; padding:9px; background:transparent; border:none; border-radius:6px; font-family:var(--mono); font-size:0.68rem; color:var(--muted); cursor:pointer; transition:all .2s; letter-spacing:0.05em; }
+.ltab.active     { background:var(--bg4); color:var(--white); }
+.lform           { display:none; flex-direction:column; gap:13px; }
+.lform.active    { display:flex; }
+.lfield label    { display:block; font-size:0.58rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); margin-bottom:5px; }
+.lfield input    { width:100%; background:var(--bg3); border:1px solid var(--border2); border-radius:8px; padding:12px 14px; color:var(--white); font-family:var(--mono); font-size:0.82rem; outline:none; transition:border-color .2s; }
+.lfield input:focus { border-color:var(--gold); }
+.lfield input::placeholder { color:#2a2a2a; }
+.pass-wrap       { position:relative; }
+.pass-wrap input { padding-right:44px; }
+.eye-btn         { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:transparent; border:none; cursor:pointer; color:var(--muted); padding:4px; display:flex; align-items:center; }
+.lerr            { background:rgba(255,77,109,0.07); border:1px solid rgba(255,77,109,0.2); border-radius:8px; padding:9px 13px; font-size:0.68rem; color:var(--red); display:none; margin-bottom:4px; }
+.lbtn            { width:100%; padding:13px; background:var(--gold); color:#050505; border:none; border-radius:8px; font-family:var(--mono); font-size:0.8rem; font-weight:500; letter-spacing:0.06em; cursor:pointer; transition:all .2s; }
+.lbtn:hover      { background:var(--gold2); }
+.lbtn:disabled   { opacity:.5; cursor:not-allowed; }
+.lswitch         { text-align:center; font-size:0.68rem; color:var(--muted); }
+.lswitch a       { color:var(--gold); cursor:pointer; }
+.login-copy      { text-align:center; font-size:0.58rem; color:var(--muted); margin-top:20px; }
+
+/* ════════════════════════════════════════════════════
+   DESKTOP LAYOUT
+════════════════════════════════════════════════════ */
+#app {
+  display:none;
+  width:100%; height:100vh;
+  flex-direction:column;
+}
+
+/* ── Top navbar (desktop) ── */
+.topnav {
+  display:none;
+  height:60px;
+  background:rgba(8,8,8,0.98);
+  border-bottom:1px solid var(--border);
+  padding:0 32px;
+  align-items:center;
+  justify-content:space-between;
+  flex-shrink:0;
+  z-index:100;
+}
+.topnav-brand      { font-family:var(--serif); font-size:1.4rem; font-weight:300; letter-spacing:0.16em; }
+.topnav-brand span { color:var(--gold); }
+.topnav-nav        { display:flex; gap:4px; }
+.tnav-btn          { padding:8px 16px; background:transparent; border:none; border-radius:8px; font-family:var(--mono); font-size:0.7rem; color:var(--muted); cursor:pointer; transition:all .2s; letter-spacing:0.04em; }
+.tnav-btn:hover    { background:var(--bg2); color:var(--white); }
+.tnav-btn.active   { background:var(--gold-dim); color:var(--gold); border:1px solid rgba(201,168,76,0.2); }
+.topnav-right      { display:flex; align-items:center; gap:12px; }
+.topnav-time       { font-size:0.72rem; color:var(--muted); }
+.topnav-av         { width:32px; height:32px; border-radius:9px; background:linear-gradient(135deg,#1a1408,#2a2010); border:1px solid rgba(201,168,76,0.25); display:flex; align-items:center; justify-content:center; font-family:var(--serif); font-size:0.85rem; color:var(--gold); cursor:pointer; }
+.lang-btn          { font-family:var(--mono); font-size:0.62rem; color:var(--gold); background:var(--gold-dim); border:1px solid rgba(201,168,76,0.2); border-radius:5px; padding:4px 8px; cursor:pointer; }
+
+/* ── Desktop content area ── */
+.desk-body  { display:none; flex:1; overflow:hidden; }
+.desk-main  { flex:1; overflow-y:auto; padding:28px 32px; }
+
+/* ── Desktop pages ── */
+.dpg        { display:none; animation:fu .25s ease both; }
+.dpg.active { display:block; }
+@keyframes fu { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── Desktop grid layouts ── */
+.desk-grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:16px; }
+.desk-grid-2 { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin-bottom:16px; }
+.desk-grid-half { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+.desk-row    { display:flex; gap:16px; margin-bottom:16px; }
+.desk-col    { display:flex; flex-direction:column; gap:16px; }
+.desk-flex-grow { flex:1; min-width:0; }
+
+.page-title  { font-family:var(--serif); font-size:1.6rem; font-weight:300; letter-spacing:0.08em; color:var(--white); margin-bottom:4px; }
+.page-sub    { font-size:0.65rem; color:var(--muted2); margin-bottom:20px; }
+
+/* ── Stat box ── */
+.stat-box    { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r); padding:18px 20px; }
+.stat-box-l  { font-size:0.55rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.stat-box-v  { font-family:var(--serif); font-size:1.8rem; font-weight:300; color:var(--white); }
+.stat-box-s  { font-size:0.65rem; color:var(--muted2); margin-top:4px; }
+
+/* ── Chart card ── */
+.chart-card  { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r); padding:18px 20px; }
+.chart-head  { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; }
+.chart-box   { height:160px; position:relative; }
+.ctabs       { display:flex; gap:4px; }
+.ct          { padding:4px 10px; background:transparent; border:1px solid var(--border); border-radius:5px; font-family:var(--mono); font-size:0.6rem; color:var(--muted); cursor:pointer; transition:all .15s; }
+.ct.active   { background:var(--gold-dim); border-color:rgba(201,168,76,0.3); color:var(--gold); }
+
+/* ── Balans karti ── */
+.bal-card    { background:linear-gradient(135deg,var(--bg2) 0%,#0d0d0d 100%); border:1px solid var(--border2); border-radius:18px; padding:22px 24px; position:relative; overflow:hidden; }
+.bal-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); opacity:.25; }
+.bal-lbl     { font-size:0.58rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+.bal-amt     { font-family:var(--serif); font-size:2.8rem; font-weight:300; color:var(--white); letter-spacing:0.03em; line-height:1; }
+.bal-amt sup { font-size:1.3rem; vertical-align:super; color:var(--gold); }
+.bal-change  { font-size:0.72rem; color:var(--green); margin-top:6px; margin-bottom:16px; }
+.bal-grid    { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; border-top:1px solid var(--border); padding-top:14px; }
+.bal-g-l     { font-size:0.55rem; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase; margin-bottom:4px; }
+.bal-g-v     { font-size:0.95rem; color:var(--white); }
+
+/* ── Pozitsiyalar ── */
+.pos-row     { display:flex; align-items:center; gap:12px; padding:12px 16px; background:var(--bg2); border:1px solid var(--border); border-radius:11px; transition:border-color .15s; }
+.pos-row:hover { border-color:var(--border2); }
+.pos-ico     { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-family:var(--serif); font-size:1.1rem; flex-shrink:0; }
+.pos-info    { flex:1; min-width:0; }
+.pos-pair    { font-size:0.82rem; color:var(--white); }
+.pos-meta    { font-size:0.62rem; color:var(--muted2); margin-top:3px; display:flex; align-items:center; gap:6px; }
+.pos-right   { text-align:right; }
+.pos-price   { font-size:0.8rem; color:var(--white); }
+.pos-pnl     { font-size:0.68rem; margin-top:3px; }
+
+/* ── Exchange karta ── */
+.ex-card     { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; transition:border-color .15s; }
+.ex-card:hover { border-color:var(--border2); }
+.ex-top      { display:flex; align-items:center; gap:12px; padding:16px; }
+.ex-ico      { width:40px; height:40px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:0.62rem; font-weight:600; letter-spacing:0.05em; flex-shrink:0; }
+.ex-nm       { font-size:0.88rem; color:var(--white); }
+.ex-tp       { font-size:0.6rem; color:var(--muted2); margin-top:2px; }
+.ex-status   { margin-left:auto; display:flex; align-items:center; gap:6px; font-size:0.62rem; }
+.ex-body     { border-top:1px solid var(--border); padding:14px 16px; display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.ex-stat-l   { font-size:0.55rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; }
+.ex-stat-v   { font-size:0.88rem; color:var(--white); margin-top:3px; }
+.ex-warn     { margin:0 16px 14px; padding:9px 12px; background:rgba(245,200,66,0.05); border:1px solid rgba(245,200,66,0.15); border-radius:8px; font-size:0.63rem; color:var(--amber); }
+
+/* ── Leaderboard ── */
+.lb-list     { }
+.lb-row      { display:flex; align-items:center; gap:12px; padding:13px 16px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .15s; }
+.lb-row:last-child { border-bottom:none; }
+.lb-row:hover  { background:var(--bg3); }
+.lb-row.you    { background:var(--gold-dim); }
+.lb-rank     { width:24px; font-family:var(--serif); font-size:0.9rem; color:var(--muted); flex-shrink:0; }
+.lb-rank.r1  { color:#d4af37; } .lb-rank.r2 { color:#a8a9ad; } .lb-rank.r3 { color:#cd7f32; }
+.lb-av       { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-family:var(--serif); font-size:0.95rem; flex-shrink:0; }
+.lb-info     { flex:1; min-width:0; }
+.lb-nm       { font-size:0.78rem; color:var(--white); display:flex; align-items:center; gap:5px; }
+.lb-handle   { font-size:0.62rem; color:var(--muted2); margin-top:2px; }
+.lb-right    { text-align:right; }
+.lb-roi      { font-size:0.85rem; color:var(--green); font-weight:500; }
+.lb-wr       { font-size:0.6rem; color:var(--muted2); margin-top:2px; }
+.you-tag     { font-size:0.5rem; padding:1px 5px; background:var(--gold-dim); color:var(--gold); border:1px solid rgba(201,168,76,0.25); border-radius:3px; letter-spacing:0.06em; }
+.lb-gap      { padding:14px 16px; background:var(--bg2); border:1px solid rgba(201,168,76,0.12); border-radius:11px; display:flex; justify-content:space-between; align-items:center; margin-top:12px; }
+.lb-gap-v    { font-size:0.9rem; color:var(--red); }
+.lb-tabs     { display:flex; border-bottom:1px solid var(--border); margin-bottom:16px; }
+.lb-tab      { flex:0; padding:10px 20px; background:none; border:none; border-bottom:2px solid transparent; font-family:var(--mono); font-size:0.7rem; color:var(--muted); cursor:pointer; letter-spacing:0.04em; transition:all .2s; }
+.lb-tab.active { color:var(--white); border-bottom-color:var(--gold); }
+.lb-mtabs    { display:flex; gap:4px; margin-bottom:16px; }
+.lb-mtab     { padding:7px 16px; background:var(--bg2); border:1px solid var(--border); border-radius:20px; font-family:var(--mono); font-size:0.68rem; color:var(--muted); cursor:pointer; transition:all .2s; }
+.lb-mtab.active { background:var(--gold-dim); border-color:rgba(201,168,76,0.3); color:var(--gold); }
+
+/* ── Pair row ── */
+.pair-row    { display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--border); }
+.pair-row:last-child { border-bottom:none; }
+.pair-rank   { font-size:0.68rem; color:var(--muted); width:18px; }
+.pair-nm     { flex:1; font-size:0.8rem; color:var(--white); }
+.pair-bar    { width:80px; height:3px; background:var(--bg3); border-radius:2px; overflow:hidden; }
+.pair-fill   { height:100%; background:var(--gold); border-radius:2px; }
+.pair-pnl    { font-size:0.75rem; min-width:60px; text-align:right; }
+
+/* ── Profil ── */
+.prof-hero   { text-align:center; padding:28px 20px; }
+.prof-av     { width:80px; height:80px; border-radius:22px; background:linear-gradient(135deg,#1a1408,#2a2010); border:1px solid rgba(201,168,76,0.3); display:flex; align-items:center; justify-content:center; font-family:var(--serif); font-size:2.2rem; color:var(--gold); margin:0 auto 14px; }
+.prof-name   { font-family:var(--serif); font-size:1.6rem; font-weight:300; color:var(--white); }
+.prof-handle { font-size:0.65rem; color:var(--muted2); margin-top:5px; }
+.prof-badges { display:flex; gap:6px; justify-content:center; margin:12px 0; flex-wrap:wrap; }
+.prof-badge  { font-size:0.6rem; padding:3px 10px; border:1px solid var(--border2); border-radius:20px; color:var(--muted2); }
+.prof-stats  { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:16px 0; }
+.prof-stat-v { font-family:var(--serif); font-size:1.5rem; font-weight:300; }
+.prof-stat-l { font-size:0.55rem; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase; }
+.prof-btns   { display:flex; gap:10px; margin-top:16px; justify-content:center; }
+.btn-gold    { padding:11px 24px; background:var(--gold); color:#050505; border:none; border-radius:9px; font-family:var(--mono); font-size:0.72rem; font-weight:500; cursor:pointer; }
+
+/* ── Follow ── */
+.ftabs       { display:flex; background:var(--bg3); border-radius:8px; padding:3px; margin-bottom:12px; }
+.ftab        { flex:1; padding:9px; background:transparent; border:none; border-radius:6px; font-family:var(--mono); font-size:0.65rem; color:var(--muted); cursor:pointer; }
+.ftab.active { background:var(--bg4); color:var(--white); }
+.follow-list { }
+.follow-row  { display:flex; align-items:center; gap:10px; padding:12px 14px; border-bottom:1px solid var(--border); }
+.follow-row:last-child { border-bottom:none; }
+.follow-av   { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-family:var(--serif); font-size:0.9rem; flex-shrink:0; }
+.follow-info { flex:1; min-width:0; }
+.follow-nm   { font-size:0.78rem; color:var(--white); }
+.follow-sub  { font-size:0.62rem; color:var(--muted2); margin-top:2px; }
+.follow-roi  { font-size:0.78rem; font-weight:500; margin-right:8px; }
+.unfollow-btn { font-size:0.62rem; padding:5px 10px; background:transparent; border:1px solid var(--border2); border-radius:5px; color:var(--muted2); cursor:pointer; white-space:nowrap; }
+
+/* ── Plan ── */
+.plan-card   { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
+.plan-free   { padding:16px; }
+.plan-item   { font-size:0.7rem; color:var(--muted2); padding:6px 0; display:flex; align-items:center; gap:8px; }
+.plan-item.ok::before { content:'✓'; color:var(--green); font-size:0.72rem; }
+
+/* ── Empty state ── */
+.empty-state { padding:40px 20px; text-align:center; }
+.empty-ico   { font-size:2rem; margin-bottom:12px; opacity:.4; }
+.empty-title { font-family:var(--serif); font-size:1.1rem; font-weight:300; color:var(--white); margin-bottom:6px; }
+.empty-sub   { font-size:0.7rem; color:var(--muted2); line-height:1.6; }
+
+/* ════════════════════════════════════════════════════
+   MOBILE LAYOUT
+════════════════════════════════════════════════════ */
+.phone {
+  width:100%;
+  height:100%;
+  height:100dvh; /* dynamic viewport height — Chrome mobil uchun */
+  background:var(--bg);
+  overflow:hidden;
+  position:fixed; /* fixed — Chrome address bar muammosini hal qiladi */
+  top:0; left:0; right:0; bottom:0;
+  display:none;
+}
+.phone::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 0%,rgba(201,168,76,0.04) 0%,transparent 55%); pointer-events:none; z-index:0; }
+
+/* status bar — safe area bilan */
+.sbar {
+  position:absolute; top:0; left:0; right:0;
+  height:calc(52px + env(safe-area-inset-top));
+  padding-top:env(safe-area-inset-top);
+  display:flex; align-items:center; justify-content:space-between;
+  padding-left:20px; padding-right:20px;
+  z-index:300;
+  background:rgba(8,8,8,0.95);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+}
+.sbar-time   { font-family:var(--mono); font-size:0.82rem; color:var(--white); }
+.sbar-r      { display:flex; align-items:center; gap:8px; }
+.sbar-r svg  { color:var(--white); }
+.bell-btn    { background:none; border:none; cursor:pointer; position:relative; color:var(--white); display:flex; align-items:center; }
+.bell-dot    { width:6px; height:6px; border-radius:50%; background:var(--red); position:absolute; top:-1px; right:-1px; border:1px solid var(--bg); }
+
+/* scroll — safe area hisobga olinadi */
+.scroll {
+  position:absolute;
+  top:calc(52px + env(safe-area-inset-top));
+  left:0; right:0;
+  bottom:calc(68px + env(safe-area-inset-bottom));
+  overflow-y:auto; overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  z-index:1;
+}
+.scroll::-webkit-scrollbar { display:none; }
+
+/* mobile pages */
+.pg          { display:none; padding-bottom:28px; animation:fu .25s ease both; }
+.pg.active   { display:block; }
+.section     { padding:0 18px; margin-top:16px; }
+.row         { display:flex; justify-content:space-between; align-items:center; }
+.more-link   { font-size:0.62rem; color:var(--gold); cursor:pointer; }
+
+/* bottom nav — safe area bilan */
+.bnav {
+  position:absolute; bottom:0; left:0; right:0;
+  height:calc(68px + env(safe-area-inset-bottom));
+  padding-bottom:env(safe-area-inset-bottom);
+  background:rgba(8,8,8,0.97);
+  backdrop-filter:blur(30px);
+  -webkit-backdrop-filter:blur(30px);
+  border-top:1px solid var(--border);
+  display:flex;
+  z-index:300;
+}
+.ni          { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; background:none; border:none; cursor:pointer; color:var(--muted); font-family:var(--mono); transition:color .2s; }
+.ni.active   { color:var(--gold); }
+.ni-ico      { font-size:1rem; line-height:1; }
+.ni-lbl      { font-size:0.52rem; letter-spacing:0.06em; text-transform:uppercase; }
+.ni-line     { width:16px; height:1px; background:var(--gold); opacity:0; margin-top:1px; transition:opacity .2s; }
+.ni.active .ni-line { opacity:1; }
+
+/* mobile dash header */
+.dash-header   { padding:14px 18px 0; display:flex; justify-content:space-between; align-items:center; }
+.dash-brand    { font-family:var(--serif); font-size:1.5rem; font-weight:300; letter-spacing:0.16em; color:var(--white); }
+.dash-brand span { color:var(--gold); }
+.dash-greeting { font-size:0.6rem; color:var(--muted); margin-top:2px; }
+.dash-avatar   { width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg,#1a1408,#2a2010); border:1px solid rgba(201,168,76,0.25); display:flex; align-items:center; justify-content:center; font-family:var(--serif); font-size:0.9rem; color:var(--gold); }
+
+/* mobile bal card */
+.m-bal-card  { margin:14px 18px 0; background:linear-gradient(135deg,var(--bg2) 0%,#0d0d0d 100%); border:1px solid var(--border2); border-radius:18px; padding:18px 20px; position:relative; overflow:hidden; }
+.m-bal-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); opacity:.25; }
+
+/* PnL qatorlar (yangi) */
+.bal-pnl-rows   { margin:14px 0 16px; display:flex; flex-direction:column; gap:6px; }
+.bal-pnl-row    { display:flex; align-items:center; gap:8px; padding:10px 12px; background:rgba(255,255,255,0.03); border-radius:10px; border:1px solid var(--border); cursor:pointer; transition:background .15s; }
+.bal-pnl-row:active { background:rgba(255,255,255,0.07); }
+.bal-pnl-ico    { font-size:0.78rem; color:var(--blue); width:16px; flex-shrink:0; text-align:center; }
+.bal-pnl-lbl    { font-size:0.62rem; color:var(--muted2); letter-spacing:0.03em; flex:1; }
+.bal-pnl-val    { font-family:var(--mono); font-size:0.82rem; font-weight:500; color:var(--white); }
+.bal-pnl-arr    { color:var(--muted); font-size:0.75rem; margin-left:4px; }
+
+/* mobile exchange pills */
+.ex-pills    { display:flex; gap:6px; padding:10px 18px 0; overflow-x:auto; }
+.ex-pills::-webkit-scrollbar { display:none; }
+.ex-pill     { display:flex; align-items:center; gap:5px; padding:6px 11px; background:var(--bg2); border:1px solid var(--border); border-radius:20px; font-size:0.65rem; color:var(--muted2); cursor:pointer; white-space:nowrap; transition:all .15s; flex-shrink:0; }
+.ex-pill.on  { border-color:var(--border2); color:var(--white); }
+.ex-dot      { width:6px; height:6px; border-radius:50%; }
+
+/* mobile chart */
+.m-chart-card { margin:12px 18px 0; background:var(--bg2); border:1px solid var(--border); border-radius:var(--r); padding:14px; }
+.m-chart-box  { height:130px; position:relative; }
+
+/* mobile pos list */
+.pos-list    { padding:0 18px; display:flex; flex-direction:column; gap:6px; }
+
+/* mobile stat grid */
+.m-stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0 18px; margin-top:12px; }
+.m-stat-box  { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r); padding:14px; }
+
+/* ════════════════════════════════════════════════════
+   MODAL (har ikkala uchun)
+════════════════════════════════════════════════════ */
+.modal-ov    { position:fixed; inset:0; background:rgba(0,0,0,0.75); backdrop-filter:blur(8px); z-index:800; display:none; align-items:flex-end; justify-content:center; }
+.modal-ov.open { display:flex; }
+.modal-sheet { width:100%; max-width:520px; background:var(--bg2); border-radius:28px 28px 0 0; border-top:1px solid var(--border2); padding:16px 22px 32px; max-height:90vh; overflow-y:auto; animation:slideUp .3s ease; }
+@keyframes slideUp { from{transform:translateY(60px);opacity:0} to{transform:translateY(0);opacity:1} }
+.modal-sheet::-webkit-scrollbar { display:none; }
+.modal-handle { width:36px; height:3px; background:var(--border2); border-radius:2px; margin:0 auto 18px; }
+.step-c      { display:none; }
+.step-c.active { display:block; }
+.step-num    { font-size:0.55rem; letter-spacing:0.2em; color:var(--gold); margin-bottom:6px; }
+.step-title  { font-family:var(--serif); font-size:1.2rem; font-weight:300; letter-spacing:0.06em; color:var(--white); margin-bottom:5px; }
+.step-desc   { font-size:0.68rem; color:var(--muted2); line-height:1.5; margin-bottom:16px; }
+.type-card   { display:flex; align-items:center; gap:12px; padding:13px 14px; background:var(--bg3); border:1px solid var(--border); border-radius:12px; cursor:pointer; transition:all .15s; margin-bottom:8px; }
+.type-card.sel { border-color:rgba(201,168,76,0.4); background:rgba(201,168,76,0.05); }
+.type-ico    { font-size:1.4rem; flex-shrink:0; }
+.type-nm     { font-size:0.8rem; color:var(--white); }
+.type-desc   { font-size:0.62rem; color:var(--muted2); margin-top:2px; }
+.type-chk    { margin-left:auto; color:var(--gold); font-size:0.8rem; flex-shrink:0; }
+.f-grp       { margin-bottom:12px; }
+.f-lbl       { display:block; font-size:0.58rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); margin-bottom:5px; }
+.f-inp       { width:100%; background:var(--bg3); border:1px solid var(--border2); border-radius:8px; padding:11px 13px; color:var(--white); font-family:var(--mono); font-size:0.8rem; outline:none; transition:border-color .2s; }
+.f-inp:focus { border-color:var(--gold); }
+.f-inp::placeholder { color:#2a2a2a; }
+.btn-row2    { display:flex; gap:8px; margin-top:12px; }
+.sec-note    { padding:10px 12px; background:rgba(201,168,76,0.04); border:1px solid rgba(201,168,76,0.12); border-radius:8px; font-size:0.63rem; color:var(--muted2); line-height:1.5; margin-bottom:14px; }
+.suc-wrap    { text-align:center; padding:16px 0; }
+.suc-ico     { width:60px; height:60px; border-radius:16px; background:rgba(0,212,170,0.07); border:1px solid rgba(0,212,170,0.2); display:flex; align-items:center; justify-content:center; font-size:1.6rem; margin:0 auto 14px; animation:pop .4s ease; color:var(--green); }
+@keyframes pop { 0%{transform:scale(.5);opacity:0} 80%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
+.suc-title   { font-family:var(--serif); font-size:1.4rem; font-weight:300; color:var(--white); margin-bottom:6px; }
+.suc-sub     { font-size:0.68rem; color:var(--muted2); margin-bottom:18px; line-height:1.5; }
+.suc-stats   { background:var(--bg3); border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:16px; text-align:left; display:flex; flex-direction:column; gap:9px; }
+.suc-row     { display:flex; justify-content:space-between; align-items:center; }
+.suc-row-l   { font-size:0.68rem; color:var(--muted2); }
+.suc-row-v   { font-size:0.78rem; color:var(--white); }
+.pv-hero     { display:flex; align-items:center; gap:13px; margin-bottom:16px; }
+.pv-av       { width:50px; height:50px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-family:var(--serif); font-size:1.4rem; border:1px solid transparent; flex-shrink:0; }
+.pv-nm       { font-family:var(--serif); font-size:1.1rem; font-weight:300; color:var(--white); display:flex; align-items:center; gap:5px; }
+.pv-handle   { font-size:0.63rem; color:var(--muted2); margin-top:3px; }
+.pv-stats    { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:12px; }
+.pv-stat     { background:var(--bg3); border:1px solid var(--border); border-radius:10px; padding:11px 10px; text-align:center; }
+.pv-stat-v   { font-family:var(--serif); font-size:1.1rem; font-weight:300; }
+.pv-stat-l   { font-size:0.55rem; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase; margin-top:2px; }
+.pv-extra    { display:flex; gap:8px; margin-bottom:12px; }
+.pve         { flex:1; background:var(--bg3); border:1px solid var(--border); border-radius:9px; padding:9px 10px; text-align:center; }
+.pve-v       { font-size:0.88rem; color:var(--white); }
+.pve-l       { font-size:0.52rem; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase; margin-top:2px; }
+.pv-badges   { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:10px; }
+.pv-badge    { font-size:0.58rem; padding:3px 9px; border:1px solid var(--border2); border-radius:20px; color:var(--muted2); }
+.pv-bio      { font-size:0.72rem; color:var(--muted2); line-height:1.5; margin-bottom:14px; padding:10px 12px; background:var(--bg3); border-radius:9px; }
+
+/* Bildirishnomalar */
+.notif-panel   { position:fixed; top:0; right:0; bottom:0; width:min(360px,100%); background:var(--bg2); border-left:1px solid var(--border); z-index:500; display:none; flex-direction:column; animation:slideLeft .25s ease; }
+.notif-panel.open { display:flex; }
+@keyframes slideLeft { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+.notif-header  { padding:18px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-shrink:0; }
+.notif-title   { font-family:var(--serif); font-size:1.2rem; font-weight:300; letter-spacing:0.08em; }
+.notif-close   { background:none; border:none; color:var(--muted); cursor:pointer; font-size:1.3rem; }
+.notif-list    { padding:14px; display:flex; flex-direction:column; gap:8px; overflow-y:auto; }
+.notif-item    { padding:13px 14px; background:var(--bg3); border:1px solid var(--border); border-radius:11px; border-left:2px solid var(--gold); }
+.notif-item.unread { border-left-color:var(--green); }
+.notif-top     { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
+.notif-cat     { font-size:0.58rem; letter-spacing:0.1em; color:var(--gold); text-transform:uppercase; }
+.notif-time    { font-size:0.58rem; color:var(--muted); }
+.notif-text    { font-size:0.72rem; color:var(--white); line-height:1.5; }
+
+/* Til paneli */
+.lang-panel  { position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(20px); z-index:600; display:none; flex-direction:column; align-items:center; justify-content:center; gap:14px; }
+.lang-panel.open { display:flex; }
+.lang-opt    { width:260px; padding:18px 24px; background:var(--bg2); border:1px solid var(--border2); border-radius:14px; display:flex; align-items:center; gap:14px; cursor:pointer; transition:all .2s; }
+.lang-opt:hover { border-color:rgba(201,168,76,0.3); }
+.lang-opt.sel   { border-color:rgba(201,168,76,0.35); background:var(--gold-dim); }
+.lang-flag   { font-size:1.6rem; }
+.lang-name   { font-family:var(--serif); font-size:1.1rem; font-weight:300; color:var(--white); }
+.lang-native { font-size:0.65rem; color:var(--muted2); margin-top:2px; }
+.lang-chk    { margin-left:auto; font-size:0.8rem; color:var(--gold); opacity:0; }
+.lang-opt.sel .lang-chk { opacity:1; }
+
+/* ════════════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+   Mobile-first yondashuv
+════════════════════════════════════════════════════ */
+
+/* DEFAULT: mobil ko'rinish */
+#app   { display:none; }
+.phone { display:block; }
+
+/* Mobile (< 768px) qo'shimcha */
+@media (max-width: 767px) {
+  html, body { overflow:hidden; position:fixed; width:100%; height:100%; }
+  #loginPage  { background:var(--bg); }
+  .login-wrap { padding:env(safe-area-inset-top, 16px) 16px 16px; }
+  .notif-panel {
+    width:100%; border-left:none;
+    top:auto; height:75dvh;
+    border-radius:20px 20px 0 0;
+    border-top:1px solid var(--border);
+  }
+}
+
+/* Desktop (>= 768px) */
+@media (min-width: 768px) {
+  .phone { display:none !important; }
+  #app   { display:flex; height:100vh; flex-direction:column; }
+  .topnav    { display:flex; }
+  .desk-body { display:flex; flex:1; overflow:hidden; }
+  .desk-main {
+    display:block; flex:1; overflow-y:auto;
+    padding:28px 32px;
+  }
+  .desk-main::-webkit-scrollbar       { width:4px; }
+  .desk-main::-webkit-scrollbar-track { background:transparent; }
+  .desk-main::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+  #loginPage {
+    background:radial-gradient(ellipse at 50% 0%,
+      rgba(201,168,76,0.06) 0%, transparent 60%), var(--bg);
+  }
+}
+
+/* Tablet (768px - 1100px) */
+@media (min-width: 768px) and (max-width: 1100px) {
+  .desk-grid-3 { grid-template-columns:1fr 1fr; }
+  .desk-main   { padding:20px 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════ LOADING ════════════ -->
+<div id="loading">
+  <div class="load-brand">kh<span>.</span>capital</div>
+  <div class="load-bar"></div>
+</div>
+
+<!-- ════════════ LOGIN ════════════ -->
+<div id="loginPage">
+  <div class="login-wrap">
+    <div class="login-topbar">
+      <div class="lang-switcher">
+        <button class="ls-btn active" id="lls-uz" onclick="setLang('uz')">UZ</button>
+        <button class="ls-btn"        id="lls-ru" onclick="setLang('ru')">RU</button>
+        <button class="ls-btn"        id="lls-en" onclick="setLang('en')">EN</button>
+      </div>
+      <div style="font-size:0.62rem;color:var(--muted)" data-t="copyright">© 2025 kh.capital</div>
+    </div>
+    <div class="login-brand">kh<span>.</span>capital</div>
+    <div class="login-card">
+      <div class="login-tabs">
+        <button class="ltab active" id="ltab-in"  onclick="switchLTab('in')"  data-t="loginTab">Kirish</button>
+        <button class="ltab"        id="ltab-reg" onclick="switchLTab('reg')" data-t="registerTab">Ro'yxat</button>
+      </div>
+      <div class="lform active" id="lf-in">
+        <div class="lfield"><label data-t="email">Email</label><input id="login-email" type="email" placeholder="email@gmail.com" autocomplete="email"></div>
+        <div class="lfield"><label data-t="password">Parol</label>
+          <div class="pass-wrap"><input id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password">
+            <button class="eye-btn" onclick="toggleEye('login-pass')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+        </div>
+        <div class="lerr" id="login-err"></div>
+        <button class="lbtn" id="login-btn" onclick="handleLogin()" data-t="loginBtn">Kirish →</button>
+        <div class="lswitch" data-t="noAcc">Akkaunt yo'qmi? <a onclick="switchLTab('reg')" data-t="regLink">Ro'yxatdan o'ting</a></div>
+      </div>
+      <div class="lform" id="lf-reg">
+        <div class="lfield"><label data-t="name">Ism</label><input id="reg-name" type="text" placeholder="To'liq ismingiz" autocomplete="name"></div>
+        <div class="lfield"><label data-t="email">Email</label><input id="reg-email" type="email" placeholder="email@gmail.com" autocomplete="email"></div>
+        <div class="lfield"><label data-t="password">Parol</label>
+          <div class="pass-wrap"><input id="reg-pass" type="password" placeholder="Min. 6 ta belgi" autocomplete="new-password">
+            <button class="eye-btn" onclick="toggleEye('reg-pass')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+        </div>
+        <div class="lerr" id="reg-err"></div>
+        <button class="lbtn" id="reg-btn" onclick="handleRegister()" data-t="regBtn">Ro'yxatdan o'tish →</button>
+        <div class="lswitch" data-t="haveAcc">Akkauntingiz bormi? <a onclick="switchLTab('in')" data-t="loginLink">Kiring</a></div>
+      </div>
+    </div>
+    <div class="login-copy" data-t="copyright">© 2025 kh.capital · Barcha huquqlar himoyalangan</div>
+    <a href="https://t.me/itskh" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:7px;margin-top:14px;padding:10px 20px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;text-decoration:none;transition:background .15s" onmouseover="this.style.background='rgba(255,255,255,0.07)'" onmouseout="this.style.background='rgba(255,255,255,0.04)'">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21.198 2.433a2.242 2.242 0 0 0-1.022.215l-16.5 6.75a2.25 2.25 0 0 0 .126 4.218l3.918 1.26 1.98 6.032a.75.75 0 0 0 1.317.208l2.504-3.337 4.032 2.956a2.25 2.25 0 0 0 3.494-1.54l2.25-15.75a2.248 2.248 0 0 0-2.099-2.012z" fill="rgba(100,181,246,0.8)"/></svg>
+      <span style="font-family:var(--mono);font-size:0.68rem;color:var(--muted2)">Bog'lanish uchun</span>
+      <span style="font-family:var(--mono);font-size:0.68rem;color:#64b5f6">@itskh</span>
+    </a>
+  </div><!-- /login-wrap -->
+</div><!-- /loginPage -->
+
+<!-- ════════════════════════════════════════════════════
+     DESKTOP APP
+════════════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- TOP NAVBAR -->
+  <nav class="topnav">
+    <div class="topnav-brand">kh<span>.</span>capital</div>
+    <div class="topnav-nav">
+      <button class="tnav-btn active" onclick="showDeskPg('dash')"      data-t="home">Bosh</button>
+      <button class="tnav-btn"        onclick="showDeskPg('exchanges')" data-t="exNav">Exchange</button>
+      <button class="tnav-btn"        onclick="showDeskPg('analytics')" data-t="analyticsNav">Tahlil</button>
+      <button class="tnav-btn"        onclick="showDeskPg('lb')"        data-t="rating">Reyting</button>
+      <button class="tnav-btn"        onclick="showDeskPg('profile')"   data-t="profileNav">Profil</button>
+    </div>
+    <div class="topnav-right">
+      <span class="topnav-time" id="clk-desk">09:41</span>
+      <button class="lang-btn" id="langBtn-desk" onclick="openLang()">UZ</button>
+      <button class="bell-btn" onclick="openNotif()" style="color:var(--white)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="bell-dot" id="bellDot"></span>
+      </button>
+      <div class="topnav-av" id="dashAvatar" onclick="showDeskPg('profile')">A</div>
+    </div>
+  </nav>
+
+  <!-- DESKTOP BODY -->
+  <div class="desk-body">
+    <div class="desk-main" id="deskMain">
+
+      <!-- ══ DASHBOARD ══ -->
+      <div class="dpg active" id="dpg-dash">
+        <div class="desk-row">
+          <!-- Sol ustun: balans + exchange -->
+          <div class="desk-col" style="width:320px;flex-shrink:0">
+            <div class="bal-card">
+              <div class="bal-lbl" data-t="totalBalance">Umumiy Balans</div>
+              <div class="bal-amt"><sup>$</sup><span id="d-balAmt">0</span></div>
+              <div class="bal-change" id="d-balChange">— hali ulanmagan</div>
+              <div class="bal-grid">
+                <div><div class="bal-g-l" data-t="totalPnl">Jami PnL</div><div class="bal-g-v" id="d-pnlTotal">—</div></div>
+                <div><div class="bal-g-l" data-t="winRate">Win Rate</div><div class="bal-g-v gold" id="d-winRate">—</div></div>
+                <div><div class="bal-g-l" data-t="positions">Pozitsiya</div><div class="bal-g-v" style="color:var(--blue)" id="d-posStat">0</div></div>
+              </div>
+            </div>
+            <!-- Kichik exchange ro'yxati -->
+            <div class="card" style="overflow:hidden">
+              <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+                <div class="lbl" data-t="exchanges">Exchangelar</div>
+                <button class="btn-g" style="padding:6px 12px;font-size:0.65rem" onclick="openModal()">+ <span data-t="connect">Ulash</span></button>
+              </div>
+              <div id="d-exMini" style="padding:8px 0">
+                <div style="padding:20px;text-align:center;font-size:0.68rem;color:var(--muted)">Hali ulanmagan</div>
+              </div>
+            </div>
+          </div>
+          <!-- O'rta: portfolio chart -->
+          <div class="desk-flex-grow desk-col">
+            <div class="chart-card" style="flex:1">
+              <div class="chart-head">
+                <div>
+                  <div class="lbl" data-t="portfolio">Portfolio</div>
+                  <div class="live" style="margin-top:4px" data-t="live">jonli</div>
+                </div>
+                <div class="ctabs">
+                  <button class="ct active">1H</button>
+                  <button class="ct">1K</button>
+                  <button class="ct">1Y</button>
+                </div>
+              </div>
+              <div class="chart-box" style="height:200px"><canvas id="portChart"></canvas></div>
+            </div>
+            <!-- Ochiq pozitsiyalar -->
+            <div class="card" style="overflow:hidden">
+              <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+                <div class="lbl" data-t="openPos">Ochiq Pozitsiyalar</div>
+                <div class="more-link" onclick="showDeskPg('exchanges')" data-t="seeAll">barchasi →</div>
+              </div>
+              <div id="dashPositions" style="padding:8px 16px;display:flex;flex-direction:column;gap:6px;padding-bottom:14px">
+                <div class="empty-state" style="padding:20px">
+                  <div class="empty-ico">◈</div>
+                  <div class="empty-title" style="font-size:0.9rem">Exchange ulang</div>
+                  <div class="empty-sub">Pozitsiyalarni ko'rish uchun exchange ulang</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ EXCHANGES ══ -->
+      <div class="dpg" id="dpg-exchanges">
+        <div class="page-title" data-t="exchanges">Exchangelar</div>
+        <div class="page-sub" id="exConnCount">0 ta ulangan</div>
+        <!-- Multi chart -->
+        <div class="chart-card" style="margin-bottom:20px">
+          <div class="chart-head">
+            <div class="lbl" data-t="balanceGrowth">Balans O'sishi</div>
+            <div id="multiChartLegend" style="display:flex;gap:12px;font-size:0.6rem"></div>
+          </div>
+          <div style="height:180px;position:relative"><canvas id="multiChart"></canvas></div>
+        </div>
+        <div id="exCardList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px">
+          <div class="empty-state" id="exEmptyState">
+            <div class="empty-ico">⇄</div>
+            <div class="empty-title">Hali hech narsa ulanmagan</div>
+            <div class="empty-sub">Binance, Bitget yoki boshqa exchange ulab portfelingizni kuzating</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ ANALYTICS ══ -->
+      <div class="dpg" id="dpg-analytics">
+        <div class="page-title" data-t="analytics">Tahlil</div>
+        <div class="page-sub" data-t="allEx">Barcha exchangelar · Bu oy</div>
+        <div class="desk-grid-3" style="margin-bottom:20px">
+          <div class="stat-box"><div class="stat-box-l" data-t="totalPnl">Jami PnL</div><div class="stat-box-v up" id="anPnl">$0</div><div class="stat-box-s">Bu oy</div></div>
+          <div class="stat-box"><div class="stat-box-l" data-t="winRate">Win Rate</div><div class="stat-box-v gold" id="anWin">0%</div><div class="stat-box-s" id="anTrades">0 ta trade</div></div>
+          <div class="stat-box"><div class="stat-box-l" data-t="drawdown">Max Drawdown</div><div class="stat-box-v dn" id="anDD">0%</div><div class="stat-box-s">Bu oy</div></div>
+        </div>
+        <div class="desk-grid-half">
+          <div class="chart-card">
+            <div class="lbl" style="margin-bottom:14px" data-t="monthlyPnl">Oylik PnL</div>
+            <div style="height:180px;position:relative"><canvas id="monthlyChart"></canvas></div>
+          </div>
+          <div class="card" style="overflow:hidden">
+            <div style="padding:14px 16px;border-bottom:1px solid var(--border)"><div class="lbl" data-t="topPairs">Eng Yaxshi Juftliklar</div></div>
+            <div id="topPairsList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ LEADERBOARD ══ -->
+      <div class="dpg" id="dpg-lb">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
+          <div>
+            <div class="page-title" data-t="globalRank">Global Reyting</div>
+            <div class="page-sub" data-t="rankSub">Bu oyning eng yaxshi trayederlari · Faqat % ko'rsatiladi</div>
+          </div>
+          <button onclick="openJoinLb()" class="btn-g" data-t="joinLb">◉ Reytingga qo'shilish</button>
+        </div>
+        <div class="lb-tabs">
+          <button class="lb-tab active" onclick="setLbTab(this,'month')" data-t="thisMonth">Bu Oy</button>
+          <button class="lb-tab"        onclick="setLbTab(this,'week')"  data-t="thisWeek">Bu Hafta</button>
+          <button class="lb-tab"        onclick="setLbTab(this,'all')"   data-t="allTime">Barcha Vaqt</button>
+        </div>
+        <div class="lb-mtabs">
+          <button class="lb-mtab active" onclick="setLbMarket(this,'forex')">Forex</button>
+          <button class="lb-mtab"        onclick="setLbMarket(this,'crypto')">Crypto</button>
+          <button class="lb-mtab"        onclick="setLbMarket(this,'cfd')">CFD</button>
+        </div>
+        <div class="card" style="overflow:hidden;max-width:700px" id="lbList">
+          <div class="lb-row"><div class="lb-rank">—</div><div class="lb-info"><div class="lb-nm" style="color:var(--muted)">Yuklanmoqda...</div></div></div>
+        </div>
+        <div class="lb-gap" id="myRankBox" style="display:none;max-width:700px">
+          <div><div style="font-size:0.68rem;color:var(--gold)">— Maqsad: TOP 5</div><div style="font-size:0.63rem;color:var(--muted2);margin-top:3px" id="myRankDesc">—</div></div>
+          <div class="lb-gap-v" id="myRankGap">—</div>
+        </div>
+      </div>
+
+      <!-- ══ PROFIL ══ -->
+      <div class="dpg" id="dpg-profile">
+        <div class="desk-row" style="align-items:flex-start">
+          <div style="width:340px;flex-shrink:0">
+            <div class="card" style="overflow:hidden;margin-bottom:16px">
+              <div class="prof-hero" style="padding:24px">
+                <div class="prof-av" id="profAvatar">A</div>
+                <div class="prof-name" id="profName">—</div>
+                <div class="prof-handle" id="profHandle">@— · Toshkent</div>
+                <div class="prof-badges" id="profBadges"><div class="prof-badge">Forex</div></div>
+                <div class="prof-stats">
+                  <div class="prof-stat"><div class="prof-stat-v up" id="profRoi">—</div><div class="prof-stat-l" data-t="thisMonth2">Bu Oy</div></div>
+                  <div class="prof-stat"><div class="prof-stat-v gold" id="profWin">—</div><div class="prof-stat-l">Win</div></div>
+                  <div class="prof-stat"><div class="prof-stat-v" style="color:var(--blue)" id="profFollowers">0</div><div class="prof-stat-l" data-t="followers">Obunachi</div></div>
+                  <div class="prof-stat"><div class="prof-stat-v" style="color:var(--muted2)" id="profFollowing">0</div><div class="prof-stat-l" data-t="following">Obuna</div></div>
+                </div>
+                <div class="prof-btns">
+                  <button class="btn-gold" onclick="openEditProfile()" data-t="editProfile">Profilni tahrirlash</button>
+                  <button class="btn-outline" onclick="shareProfile()" data-t="share">Ulashish</button>
+                </div>
+              </div>
+            </div>
+            <div class="card" style="overflow:hidden;margin-bottom:16px">
+              <div style="padding:14px 16px;border-bottom:1px solid var(--border)"><div class="lbl" data-t="connectedAccounts">Ulangan Hisoblar</div></div>
+              <div class="plan-free">
+                <div class="plan-item ok" data-t="pl1">3 ta Kripto exchange</div>
+                <div class="plan-item ok" data-t="pl2">3 ta Forex hisob</div>
+                <div class="plan-item ok" data-t="pl3">1 ta Aksiya / CFD</div>
+                <div class="plan-item ok" data-t="pl4">Statistika va tahlil</div>
+                <div class="plan-item ok" data-t="pl5">Leaderboard</div>
+              </div>
+            </div>
+            <button onclick="handleLogout()" style="width:100%;padding:12px;background:transparent;border:1px solid var(--border);border-radius:9px;color:var(--muted);font-family:var(--mono);font-size:0.73rem;cursor:pointer" data-t="logout">Chiqish</button>
+          </div>
+          <!-- Follow bo'lim -->
+          <div class="desk-flex-grow">
+            <div class="card" style="overflow:hidden">
+              <div class="ftabs" style="margin:14px 14px 0">
+                <button class="ftab active" onclick="setFtab(this,'following')" data-t="followingTab">Obuna</button>
+                <button class="ftab"        onclick="setFtab(this,'followers')" data-t="followersTab">Obunachilар</button>
+              </div>
+              <div id="fol-following" class="follow-list" style="padding-bottom:8px">
+                <div style="padding:24px;text-align:center;font-size:0.68rem;color:var(--muted)">Hali hech kimga obuna emassiz</div>
+              </div>
+              <div id="fol-followers" class="follow-list" style="display:none;padding-bottom:8px">
+                <div style="padding:24px;text-align:center;font-size:0.68rem;color:var(--muted)">Hali obunachi yo'q</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /desk-main -->
+  </div><!-- /desk-body -->
+</div><!-- /app -->
+
+<!-- ════════════════════════════════════════════════════
+     MOBILE PHONE
+════════════════════════════════════════════════════ -->
+<div class="phone">
+  <div class="sbar">
+    <div class="sbar-time" id="clk">09:41</div>
+    <div class="sbar-r">
+      <button class="bell-btn" onclick="openNotif()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="bell-dot"></span>
+      </button>
+      <button class="lang-btn" id="langBtn" onclick="openLang()">UZ</button>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>
+      <svg width="20" height="12" viewBox="0 0 24 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="0" y="1" width="20" height="12" rx="3"/><path d="M21 5v4" stroke-linecap="round"/><rect x="2" y="3" width="14" height="8" rx="1" fill="currentColor"/></svg>
+    </div>
+  </div>
+
+  <div class="scroll" id="scrollEl">
+
+    <!-- MOBILE: DASHBOARD -->
+    <div class="pg active" id="pg-dash">
+      <div class="dash-header">
+        <div>
+          <div class="dash-brand">kh<span>.</span>capital</div>
+          <div class="dash-greeting" id="greet">Assalomu alaykum 👋</div>
+        </div>
+        <div class="dash-avatar" id="mDashAvatar">A</div>
+      </div>
+      <div class="m-bal-card">
+        <!-- Yuqori: Balans -->
+        <div class="bal-lbl" data-t="totalBalance">Umumiy Balans</div>
+        <div class="bal-amt"><sup>$</sup><span id="balAmt">0</span></div>
+
+        <!-- O'rta: 3 ta PnL satri — bosiladi -->
+        <div class="bal-pnl-rows">
+          <div class="bal-pnl-row" onclick="openPosPanel('open')">
+            <span class="bal-pnl-ico">◈</span>
+            <span class="bal-pnl-lbl">Ochiq pozitsiyalar PnL</span>
+            <span class="bal-pnl-val" id="openPnl">—</span>
+            <span class="bal-pnl-arr">›</span>
+          </div>
+          <div class="bal-pnl-row" onclick="openPosPanel('today')">
+            <span class="bal-pnl-ico" style="color:var(--green)">☀</span>
+            <span class="bal-pnl-lbl">Bugungi foyda / zarar</span>
+            <span class="bal-pnl-val" id="todayPnl">—</span>
+            <span class="bal-pnl-arr">›</span>
+          </div>
+          <div class="bal-pnl-row" onclick="openPosPanel('all')">
+            <span class="bal-pnl-ico" style="color:var(--gold)">∑</span>
+            <span class="bal-pnl-lbl">Jami PnL (barcha vaqt)</span>
+            <span class="bal-pnl-val" id="totalPnlNew">—</span>
+            <span class="bal-pnl-arr">›</span>
+          </div>
+        </div>
+
+        <!-- Quyi: Win Rate | Drawdown -->
+        <div class="bal-grid" style="grid-template-columns:1fr 1fr">
+          <div>
+            <div class="bal-g-l" data-t="winRate">Win Rate</div>
+            <div class="bal-g-v gold" id="winRateStat">—</div>
+          </div>
+          <div>
+            <div class="bal-g-l" data-t="drawdown">Drawdown</div>
+            <div class="bal-g-v dn" id="drawdownStat">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="ex-pills" id="dashPills">
+        <div class="ex-pill on"><div class="ex-dot" style="background:var(--gold)"></div><span data-t="all">Barchasi</span></div>
+      </div>
+      <div class="m-chart-card">
+        <div class="chart-head">
+          <div><div class="lbl" data-t="portfolio">Portfolio</div><div class="live" style="margin-top:3px" data-t="live">jonli</div></div>
+          <div class="ctabs"><button class="ct active">1H</button><button class="ct">1K</button><button class="ct">1Y</button></div>
+        </div>
+        <div class="m-chart-box"><canvas id="portChartM"></canvas></div>
+      </div>
+      <!-- TAHLIL — Bosh sahifada (grafik + juftliklar) -->
+      <div style="margin-top:18px">
+        <div class="section">
+          <div class="row" style="margin-bottom:2px">
+            <div style="font-family:var(--serif);font-size:1.15rem;font-weight:300;letter-spacing:0.08em" data-t="analytics">Tahlil</div>
+            <div style="font-size:0.6rem;color:var(--muted2)" data-t="allEx">Barcha exchangelar · Bu oy</div>
+          </div>
+        </div>
+        <div class="section" style="margin-top:12px">
+          <div class="lbl" style="margin-bottom:10px" data-t="monthlyPnl">Oylik PnL</div>
+          <div class="card" style="padding:14px"><div style="height:130px;position:relative"><canvas id="monthlyChartM"></canvas></div></div>
+        </div>
+        <div class="section" style="margin-top:14px">
+          <div class="lbl" style="margin-bottom:10px" data-t="topPairs">Eng Yaxshi Juftliklar</div>
+          <div class="card" style="overflow:hidden" id="mTopPairsList"><div class="pair-row"><div class="pair-rank">—</div><div class="pair-nm" style="color:var(--muted)">Exchange ulanmagan</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOBILE: EXCHANGES -->
+    <div class="pg" id="pg-exchanges">
+      <div class="section">
+        <div class="row" style="margin-bottom:14px">
+          <div><div style="font-family:var(--serif);font-size:1.3rem;font-weight:300;letter-spacing:0.08em" data-t="exchanges">Exchangelar</div><div style="font-size:0.6rem;color:var(--muted2);margin-top:2px" id="mExConnCount">0 ta ulangan</div></div>
+          <button class="btn-g" style="width:auto;padding:7px 15px;font-size:0.67rem" onclick="openModal()">+ <span data-t="connect">Ulash</span></button>
+        </div>
+        <div class="card" style="padding:14px;margin-bottom:14px">
+          <div class="row" style="margin-bottom:12px"><div class="lbl" data-t="balanceGrowth">Balans O'sishi</div><div id="mMultiLegend" style="display:flex;gap:10px;font-size:0.58rem"></div></div>
+          <div style="height:150px;position:relative"><canvas id="multiChartM"></canvas></div>
+        </div>
+        <div id="mExCardList" style="display:flex;flex-direction:column;gap:10px">
+          <div class="empty-state" id="mExEmptyState"><div class="empty-ico">⇄</div><div class="empty-title">Hali hech narsa ulanmagan</div><div class="empty-sub">Exchange ulab portfelingizni kuzating</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOBILE: LEADERBOARD -->
+    <div class="pg" id="pg-lb">
+      <div style="padding:14px 18px 0">
+        <div style="font-family:var(--serif);font-size:1.4rem;font-weight:300;letter-spacing:0.1em" data-t="globalRank">Global Reyting</div>
+        <div style="font-size:0.6rem;color:var(--muted2);margin-top:3px" data-t="rankSub">Bu oyning eng yaxshi trayederlari · Faqat % ko'rsatiladi</div>
+      </div>
+      <div class="lb-tabs" style="padding:0 18px;margin-top:10px">
+        <button class="lb-tab active" onclick="setLbTab(this,'month')" data-t="thisMonth">Bu Oy</button>
+        <button class="lb-tab"        onclick="setLbTab(this,'week')"  data-t="thisWeek">Bu Hafta</button>
+        <button class="lb-tab"        onclick="setLbTab(this,'all')"   data-t="allTime">Barcha Vaqt</button>
+      </div>
+      <div style="display:flex;padding:8px 18px;gap:6px">
+        <button class="lb-mtab active" onclick="setLbMarket(this,'forex')">Forex</button>
+        <button class="lb-mtab"        onclick="setLbMarket(this,'crypto')">Crypto</button>
+        <button class="lb-mtab"        onclick="setLbMarket(this,'cfd')">CFD</button>
+      </div>
+      <div class="section" style="margin-top:4px">
+        <div class="card" style="overflow:hidden" id="mLbList"><div class="lb-row"><div class="lb-rank">—</div><div class="lb-info"><div class="lb-nm" style="color:var(--muted)">Yuklanmoqda...</div></div></div></div>
+        <button onclick="openJoinLb()" style="width:100%;padding:13px;background:transparent;border:1px solid rgba(201,168,76,0.3);border-radius:12px;font-family:var(--mono);font-size:0.72rem;color:var(--gold);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px">
+          <span>◉</span><span data-t="joinLb">Reytingga qo'shilish</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- MOBILE: PROFIL -->
+    <div class="pg" id="pg-profile">
+      <div class="section">
+        <div class="prof-hero" style="padding:20px 0">
+          <div class="prof-av" id="mProfAvatar">A</div>
+          <div class="prof-name" id="mProfName">—</div>
+          <div class="prof-handle" id="mProfHandle">@— · Toshkent</div>
+          <div class="prof-badges"><div class="prof-badge">Forex</div></div>
+          <div class="prof-stats">
+            <div class="prof-stat"><div class="prof-stat-v up" id="mProfRoi">—</div><div class="prof-stat-l" data-t="thisMonth2">Bu Oy</div></div>
+            <div class="prof-stat"><div class="prof-stat-v gold" id="mProfWin">—</div><div class="prof-stat-l">Win</div></div>
+            <div class="prof-stat"><div class="prof-stat-v" style="color:var(--blue)" id="mProfFollowers">0</div><div class="prof-stat-l" data-t="followers">Obunachi</div></div>
+            <div class="prof-stat"><div class="prof-stat-v" style="color:var(--muted2)" id="mProfFollowing">0</div><div class="prof-stat-l" data-t="following">Obuna</div></div>
+          </div>
+          <div class="prof-btns">
+            <button class="btn-gold" onclick="openEditProfile()" data-t="editProfile">Profilni tahrirlash</button>
+            <button class="btn-outline" onclick="shareProfile()" data-t="share">Ulashish</button>
+          </div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="ftabs">
+          <button class="ftab active" onclick="setFtab(this,'following')" data-t="followingTab">Obuna</button>
+          <button class="ftab"        onclick="setFtab(this,'followers')" data-t="followersTab">Obunachilар</button>
+        </div>
+        <div id="fol-following" class="card" style="overflow:hidden"><div style="padding:20px;text-align:center;font-size:0.68rem;color:var(--muted)">Hali hech kimga obuna emassiz</div></div>
+        <div id="fol-followers" class="card" style="overflow:hidden;display:none"><div style="padding:20px;text-align:center;font-size:0.68rem;color:var(--muted)">Hali obunachi yo'q</div></div>
+      </div>
+      <div class="section">
+        <div class="lbl" style="margin-bottom:10px" data-t="connectedAccounts">Ulangan Hisoblar</div>
+        <div class="plan-card"><div class="plan-free" style="border-bottom:none">
+          <div class="plan-item ok" data-t="pl1">3 ta Kripto exchange</div>
+          <div class="plan-item ok" data-t="pl2">3 ta Forex hisob</div>
+          <div class="plan-item ok" data-t="pl3">1 ta Aksiya / CFD</div>
+          <div class="plan-item ok" data-t="pl4">Statistika va tahlil</div>
+          <div class="plan-item ok" data-t="pl5">Leaderboard</div>
+        </div></div>
+      </div>
+      <div class="section" style="margin-bottom:8px">
+        <button onclick="handleLogout()" style="width:100%;padding:12px;background:transparent;border:1px solid var(--border);border-radius:9px;color:var(--muted);font-family:var(--mono);font-size:0.73rem;cursor:pointer" data-t="logout">Chiqish</button>
+      </div>
+      <div class="section" style="margin-bottom:20px">
+        <a href="https://t.me/itskh" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:7px;padding:11px;background:rgba(100,181,246,0.05);border:1px solid rgba(100,181,246,0.15);border-radius:12px;text-decoration:none;transition:background .15s">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M21.198 2.433a2.242 2.242 0 0 0-1.022.215l-16.5 6.75a2.25 2.25 0 0 0 .126 4.218l3.918 1.26 1.98 6.032a.75.75 0 0 0 1.317.208l2.504-3.337 4.032 2.956a2.25 2.25 0 0 0 3.494-1.54l2.25-15.75a2.248 2.248 0 0 0-2.099-2.012z" fill="#64b5f6"/></svg>
+          <span style="font-family:var(--mono);font-size:0.67rem;color:var(--muted2)">Bog'lanish uchun</span>
+          <span style="font-family:var(--mono);font-size:0.67rem;color:#64b5f6;font-weight:500">@itskh</span>
+        </a>
+      </div>
+    </div>
+
+  </div><!-- /scroll -->
+
+  <div class="bnav">
+    <button class="ni active" onclick="showPg('dash')">     <div class="ni-ico">◈</div><div class="ni-lbl" data-t="home">Bosh</div>       <div class="ni-line"></div></button>
+    <button class="ni"        onclick="showPg('exchanges')"> <div class="ni-ico">⇄</div><div class="ni-lbl" data-t="exNav">Exchange</div>  <div class="ni-line"></div></button>
+    <button class="ni"        onclick="openTeamsHub()">      <div class="ni-ico">⬡</div><div class="ni-lbl">Jamoam</div>                   <div class="ni-line"></div></button>
+    <button class="ni"        onclick="showPg('lb')">        <div class="ni-ico">◉</div><div class="ni-lbl" data-t="rating">Reyting</div>  <div class="ni-line"></div></button>
+    <button class="ni"        onclick="showPg('profile')">   <div class="ni-ico">○</div><div class="ni-lbl" data-t="profileNav">Profil</div><div class="ni-line"></div></button>
+  </div>
+</div><!-- /phone -->
+
+<!-- ════════════ BILDIRISHNOMALAR ════════════ -->
+<div class="notif-panel" id="notifPanel">
+  <div class="notif-header">
+    <div class="notif-title" data-t="notifications">Bildirishnomalar</div>
+    <button class="notif-close" onclick="closeNotif()">✕</button>
+  </div>
+  <div class="notif-list">
+    <div class="notif-item unread">
+      <div class="notif-top"><span class="notif-cat" data-t="system">Tizim</span><span class="notif-time">hozir</span></div>
+      <div class="notif-text" data-t="n1">🎉 kh.capital v2.0 chiqdi!</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ TIL PANELI ════════════ -->
+<div class="lang-panel" id="langPanel">
+  <div class="lang-opt sel" id="lo-uz" onclick="chooseLang('uz')"><div class="lang-flag">🇺🇿</div><div><div class="lang-name">O'zbek</div><div class="lang-native">O'zbek tili</div></div><div class="lang-chk">✓</div></div>
+  <div class="lang-opt"     id="lo-ru" onclick="chooseLang('ru')"><div class="lang-flag">🇷🇺</div><div><div class="lang-name">Русский</div><div class="lang-native">Rus tili</div></div><div class="lang-chk">✓</div></div>
+  <div class="lang-opt"     id="lo-en" onclick="chooseLang('en')"><div class="lang-flag">🇬🇧</div><div><div class="lang-name">English</div><div class="lang-native">Ingliz tili</div></div><div class="lang-chk">✓</div></div>
+</div>
+
+<!-- ════════════ EXCHANGE ULASH MODALI ════════════ -->
+<div class="modal-ov" id="modal" onclick="closeOut(event)">
+  <div class="modal-sheet" id="mSheet">
+    <div class="modal-handle"></div>
+    <div class="step-c active" id="mA">
+      <div class="step-num">QADAM 1 / 3</div>
+      <div class="step-title" data-t="connectEx">Exchange Ulash</div>
+      <div class="step-desc" data-t="selectType">Hisob turini tanlang</div>
+      <div class="type-card" id="tc-c" onclick="selType('c')"><div class="type-ico">₿</div><div><div class="type-nm">Crypto</div><div class="type-desc" data-t="apiConnect">API kalit orqali · Avtomatik</div><div class="type-ex">Binance, Bitget</div></div><div class="type-chk" id="chk-c"></div></div>
+      <div class="type-card" id="tc-f" onclick="selType('f')"><div class="type-ico">€</div><div><div class="type-nm">Forex</div><div class="type-desc" data-t="myfxConnect">Myfxbook orqali · Bepul</div><div class="type-ex">Exness, XM, RoboForex...</div></div><div class="type-chk" id="chk-f"></div></div>
+      <div class="type-card" id="tc-s" onclick="selType('s')"><div class="type-ico">◈</div><div><div class="type-nm">Aksiya / CFD</div><div class="type-desc" data-t="myfxConnect">Myfxbook orqali · Bepul</div><div class="type-ex">Amana, Interactive Brokers...</div></div><div class="type-chk" id="chk-s"></div></div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn-ghost" onclick="closeModal()" data-t="cancel">Bekor qilish</button>
+        <button class="btn-g" style="flex:1" id="btnNext" disabled onclick="goMB()" data-t="continue">Davom etish →</button>
+      </div>
+    </div>
+    <div class="step-c" id="mB-c">
+      <div class="step-num">QADAM 2 / 3</div>
+      <div class="step-title" data-t="enterApi">API Kalitni Kiriting</div>
+      <div class="step-desc" data-t="apiDesc">Exchange da "Read Only" API yarating.</div>
+      <div class="f-grp"><label class="f-lbl">EXCHANGE</label><select class="f-inp" id="apiExchange" onchange="togglePassphrase(this.value)"><option value="binance">Binance</option><option value="bitget">Bitget</option></select></div>
+      <div class="f-grp"><label class="f-lbl">API KEY</label><input class="f-inp" type="text" id="apiKey" placeholder="xxxxxxxxxxxxxxxxxxxx"></div>
+      <div class="f-grp"><label class="f-lbl">SECRET KEY</label><input class="f-inp" type="password" id="apiSecret" placeholder="••••••••••••••••••••"></div>
+      <div class="f-grp" id="passphraseRow" style="display:none"><label class="f-lbl">PASSPHRASE <span style="color:var(--muted2);font-size:0.55rem">(Bitget uchun)</span></label><input class="f-inp" type="password" id="apiPassphrase" placeholder="API yaratishda qo'ygan so'z"></div>
+      <div class="sec-note" data-t="readOnlyWarn">⚠️ "Read Only" rejimini tanlang. Pul yechish ruxsatini BERMANG.</div>
+      <div class="btn-row2"><button class="btn-ghost" onclick="goMA()" data-t="back">← Orqaga</button><button class="btn-g" style="flex:1" id="apiConnBtn" onclick="doConnCrypto()" data-t="connect">Ulash ✓</button></div>
+    </div>
+    <div class="step-c" id="mB-m">
+      <div class="step-c active" id="ms1">
+        <div class="step-num">QADAM 2A / 3</div>
+        <div class="step-title" data-t="mfxRegister">Myfxbook da ro'yxat</div>
+        <div class="step-desc" data-t="mfxDesc">Forex/Aksiya brokerini ulash uchun Myfxbook da bepul hisob yarating.</div>
+        <a href="https://myfxbook.com" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;background:rgba(0,153,255,0.06);border:1px solid rgba(0,153,255,0.2);border-radius:9px;font-size:0.72rem;color:#4d9fff;text-decoration:none;margin-bottom:14px" data-t="freeReg">Bepul ro'yxatdan o'tish ↗</a>
+        <div class="btn-row2"><button class="btn-ghost" onclick="goMA()" data-t="back">← Orqaga</button><button class="btn-g" style="flex:1" onclick="showMs(2)" data-t="registered">Ro'yxatdan o'tdim →</button></div>
+        <div style="text-align:center;margin-top:10px;font-size:0.65rem;color:var(--muted)"><span data-t="alreadyHave">Allaqachon hisobim bor</span> — <a style="color:var(--gold);cursor:pointer" onclick="showMs(3)" data-t="skip">o'tkazib yuborish</a></div>
+      </div>
+      <div class="step-c" id="ms2">
+        <div class="step-num">QADAM 2B / 3</div>
+        <div class="step-title" data-t="connectBroker">Broker hisobingizni uling</div>
+        <div class="sec-note" data-t="investorWarn">⚠️ Faqat Investor parolini kiriting. Master parolni hech qachon kiritmang! 🔐</div>
+        <div class="btn-row2"><button class="btn-ghost" onclick="showMs(1)" data-t="back">← Orqaga</button><button class="btn-g" style="flex:1" onclick="showMs(3)" data-t="connected3">Ulladim →</button></div>
+      </div>
+      <div class="step-c" id="ms3">
+        <div class="step-num">OXIRGI QADAM</div>
+        <div class="step-title" data-t="loginMfx">Myfxbook bilan kiring</div>
+        <div class="sec-note" data-t="secNote">🔐 Biz faqat o'qish huquqiga egamiz.</div>
+        <div class="f-grp"><label class="f-lbl">MYFXBOOK EMAIL</label><input class="f-inp" id="mfxEmail" type="email" placeholder="email@gmail.com"></div>
+        <div class="f-grp"><label class="f-lbl" data-t="mfxPassword">MYFXBOOK PAROLI</label><input class="f-inp" id="mfxPass" type="password" placeholder="••••••••••"></div>
+        <div class="btn-row2"><button class="btn-ghost" onclick="showMs(2)" data-t="back">← Orqaga</button><button class="btn-g" style="flex:1" id="mfxConnBtn" onclick="doConnMfx()" data-t="connect">Ulash ✓</button></div>
+      </div>
+    </div>
+    <div class="step-c" id="mC">
+      <div class="suc-wrap">
+        <div class="suc-ico">✓</div>
+        <div class="suc-title" data-t="success">Muvaffaqiyatli!</div>
+        <div class="suc-sub" data-t="successDesc">Barcha hisoblaringiz sinxronlashtirildi.</div>
+        <div class="suc-stats" id="sucStats"></div>
+        <button class="btn-g" style="width:100%" onclick="closeModal();refreshDash()" data-t="toDashboard">Dashboard ga o'tish →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ JOIN LEADERBOARD ════════════ -->
+<div class="modal-ov" id="joinLbModal" onclick="if(event.target===this)closeJoinLb()">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div id="jlb-step1">
+      <div class="step-num">QADAM 1 / 2</div>
+      <div style="font-family:var(--serif);font-size:1.1rem;font-weight:300;color:var(--white);margin-bottom:5px" data-t="joinLbTitle">Reytingga qo'shilish</div>
+      <div style="font-size:0.68rem;color:var(--muted2);margin-bottom:18px;line-height:1.5">Qaysi bozorda raqobatlashmoqchisiz?</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+        <div class="type-card" id="jlb-forex"  onclick="selJlb('forex',this)"> <div class="type-ico">€</div><div><div class="type-nm">Forex</div><div class="type-desc">Exness, XM, RoboForex...</div></div><div class="type-chk" id="jchk-forex"></div></div>
+        <div class="type-card" id="jlb-crypto" onclick="selJlb('crypto',this)"><div class="type-ico">₿</div><div><div class="type-nm">Crypto</div><div class="type-desc">Binance, Bitget, Bybit...</div></div><div class="type-chk" id="jchk-crypto"></div></div>
+        <div class="type-card" id="jlb-cfd"    onclick="selJlb('cfd',this)">   <div class="type-ico">◈</div><div><div class="type-nm">CFD / Aksiya</div><div class="type-desc">Amana va boshqalar</div></div><div class="type-chk" id="jchk-cfd"></div></div>
+      </div>
+      <div style="display:flex;gap:8px"><button class="btn-ghost" onclick="closeJoinLb()" data-t="cancel">Bekor qilish</button><button class="btn-g" style="flex:1" id="jlbNextBtn" disabled onclick="jlbNext()" data-t="continue">Davom etish →</button></div>
+    </div>
+    <div id="jlb-step2" style="display:none">
+      <div class="step-num">QADAM 2 / 2</div>
+      <div style="font-family:var(--serif);font-size:1.1rem;font-weight:300;color:var(--white);margin-bottom:5px" data-t="confirmJoin">Tasdiqlash</div>
+      <div id="jlb-confirm-box" style="background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:14px;margin-bottom:14px"></div>
+      <div style="padding:10px 12px;background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.15);border-radius:8px;font-size:0.63rem;color:var(--muted2);margin-bottom:14px;line-height:1.5">✓ Balans yashirin · Faqat ROI % ko'rsatiladi<br>✓ Istalgan vaqt reytingdan chiqishingiz mumkin</div>
+      <div style="display:flex;gap:8px"><button class="btn-ghost" onclick="jlbBack()" data-t="back">← Orqaga</button><button class="btn-g" style="flex:1" onclick="jlbConfirm()" data-t="joinConfirm">Qo'shilish ✓</button></div>
+    </div>
+    <div id="jlb-success" style="display:none;text-align:center;padding:16px 0">
+      <div style="width:60px;height:60px;border-radius:16px;background:rgba(0,212,170,0.07);border:1px solid rgba(0,212,170,0.2);display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin:0 auto 14px;animation:pop .4s ease">✓</div>
+      <div style="font-family:var(--serif);font-size:1.3rem;font-weight:300;color:var(--white);margin-bottom:6px" data-t="joinedLb">Reytingga qo'shildingiz!</div>
+      <div style="font-size:0.68rem;color:var(--muted2);margin-bottom:20px;line-height:1.5" data-t="joinedDesc">Natijalaringiz har kuni yangilanadi.</div>
+      <button class="btn-g" style="width:100%" onclick="closeJoinLb()" data-t="great">Zo'r! →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ PROFIL MODAL ════════════ -->
+<div class="modal-ov" id="pvModal" onclick="if(event.target===this)closePvModal()">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="pv-hero"><div class="pv-av" id="pv-av"></div><div><div class="pv-nm" id="pv-nm"></div><div class="pv-handle" id="pv-handle"></div></div></div>
+    <div class="pv-stats">
+      <div class="pv-stat"><div class="pv-stat-v up" id="pv-roi"></div><div class="pv-stat-l" data-t="thisMonth2">Bu Oy</div></div>
+      <div class="pv-stat"><div class="pv-stat-v gold" id="pv-allroi"></div><div class="pv-stat-l" data-t="allTimeRoi">Jami ROI</div></div>
+      <div class="pv-stat"><div class="pv-stat-v gold" id="pv-wr"></div><div class="pv-stat-l">Win%</div></div>
+    </div>
+    <div class="pv-extra">
+      <div class="pve"><div class="pve-v" id="pv-fol" style="color:var(--blue)"></div><div class="pve-l" data-t="followers">Obunachi</div></div>
+      <div class="pve"><div class="pve-v" id="pv-trades" style="color:var(--muted2)"></div><div class="pve-l" data-t="trades">Bitimlar</div></div>
+      <div class="pve"><div class="pve-v" id="pv-city" style="color:var(--muted2);font-size:0.75rem"></div><div class="pve-l" data-t="city">Shahar</div></div>
+    </div>
+    <div class="pv-badges" id="pv-badges"></div>
+    <div class="pv-bio" id="pv-bio"></div>
+    <button id="pvFollowBtn" class="btn-g" style="width:100%;margin-bottom:8px" onclick="toggleFollow()">♥ <span data-t="subscribe">Obuna bo'lish</span></button>
+    <button class="btn-outline" style="width:100%" onclick="closePvModal()" data-t="close">Yopish</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════════════ -->
+<script>
+// ── Soat ──
+(function(){
+  function tick(){
+    const t = new Date().toLocaleTimeString("uz",{hour:"2-digit",minute:"2-digit"});
+    const a = document.getElementById("clk"); if(a) a.textContent=t;
+    const b = document.getElementById("clk-desk"); if(b) b.textContent=t;
+  }
+  setInterval(tick,1000); tick();
+})();
+
+// ── Loading ──
+setTimeout(()=>{
+  const l=document.getElementById("loading");
+  l.style.opacity="0";
+  setTimeout(()=>{ l.style.display="none"; },500);
+},1900);
+
+// ── Desktop navigatsiya ──
+const _dpgMap = {dash:0,exchanges:1,analytics:2,lb:3,profile:4};
+window.showDeskPg = function(name){
+  document.querySelectorAll(".dpg").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".tnav-btn").forEach(b=>b.classList.remove("active"));
+  document.getElementById("dpg-"+name)?.classList.add("active");
+  document.querySelectorAll(".tnav-btn")[_dpgMap[name]]?.classList.add("active");
+  document.getElementById("deskMain").scrollTop=0;
+  if(name==="analytics") window._drawAnalytics?.();
+  if(name==="exchanges") window._drawMultiChart?.();
+  if(name==="lb")        window._loadLeaderboard?.();
+};
+
+// ── Mobile navigatsiya ──
+const _pgMap = {dash:0,exchanges:1,analytics:2,lb:3,profile:4};
+window.showPg = function(name){
+  document.querySelectorAll(".pg").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".ni").forEach(n=>n.classList.remove("active"));
+  document.getElementById("pg-"+name)?.classList.add("active");
+  document.querySelectorAll(".ni")[_pgMap[name]]?.classList.add("active");
+  document.getElementById("scrollEl")?.scrollTo(0,0);
+  if(name==="analytics") window._drawAnalytics?.();
+  if(name==="exchanges") window._drawMultiChart?.();
+  if(name==="lb")        window._loadLeaderboard?.();
+};
+
+// ── Bildirishnomalar ──
+window.openNotif  = ()=>document.getElementById("notifPanel").classList.add("open");
+window.closeNotif = ()=>document.getElementById("notifPanel").classList.remove("open");
+
+// ── Login forma ──
+window.switchLTab = t=>["in","reg"].forEach(x=>{
+  document.getElementById("ltab-"+x)?.classList.toggle("active",x===t);
+  document.getElementById("lf-"+x)?.classList.toggle("active",x===t);
+});
+window.toggleEye  = id=>{ const i=document.getElementById(id); if(i) i.type=i.type==="password"?"text":"password"; };
+
+// ── Til tizimi ──
+window._curLang = "uz";
+const _T={
+  uz:{totalBalance:"Umumiy Balans",today:"bugun",totalPnl:"Jami PnL",winRate:"Win Rate",positions:"Pozitsiya",all:"Barchasi",portfolio:"Portfolio",live:"jonli",openPos:"Ochiq Pozitsiyalar",seeAll:"barchasi →",exchanges:"Exchangelar",connect:"Ulash",balanceGrowth:"Balans O'sishi",balance:"Balans",analytics:"Tahlil",allEx:"Barcha exchangelar · Bu oy",drawdown:"Max Drawdown",bestDay:"Eng Yaxshi Kun",monthlyPnl:"Oylik PnL",topPairs:"Eng Yaxshi Juftliklar",globalRank:"Global Reyting",rankSub:"Bu oyning eng yaxshi trayederlari · Faqat % ko'rsatiladi",thisMonth:"Bu Oy",thisWeek:"Bu Hafta",allTime:"Barcha Vaqt",since:"dan",thisMonth2:"Bu Oy",followers:"Obunachi",following:"Obuna",editProfile:"Profilni tahrirlash",share:"Ulashish",following2:"Kuzatilmoqda",logout:"Chiqish",home:"Bosh",exNav:"Exchange",analyticsNav:"Tahlil",rating:"Reyting",profileNav:"Profil",tagline:"PORTFOLIO TRACKER · BEPUL",loginTab:"Kirish",registerTab:"Ro'yxat",email:"Email",password:"Parol",loginBtn:"Kirish →",noAcc:"Akkaunt yo'qmi?",regLink:"Ro'yxatdan o'ting",name:"Ism",regBtn:"Ro'yxatdan o'tish →",haveAcc:"Akkauntingiz bormi?",loginLink:"Kiring",copyright:"© 2025 kh.capital · Barcha huquqlar himoyalangan",notifications:"Bildirishnomalar",system:"Tizim",n1:"🎉 kh.capital v2.0 chiqdi!",connectEx:"Exchange Ulash",selectType:"Hisob turini tanlang",apiConnect:"API kalit orqali · Avtomatik",myfxConnect:"Myfxbook orqali · Bepul",continue:"Davom etish →",back:"← Orqaga",connect2:"Ulash ✓",enterApi:"API Kalitni Kiriting",apiDesc:"Exchange da \"Read Only\" API yarating.",readOnlyWarn:"⚠️ \"Read Only\" rejimini tanlang. Pul yechish ruxsatini BERMANG.",mfxRegister:"Myfxbook da ro'yxat",mfxDesc:"Myfxbook da bepul hisob yarating.",freeReg:"Bepul ro'yxatdan o'tish ↗",alreadyHave:"Allaqachon hisobim bor",skip:"o'tkazib yuborish",registered:"Ro'yxatdan o'tdim →",investorWarn:"⚠️ Faqat Investor parolini kiriting. 🔐",connected3:"Ulladim →",loginMfx:"Myfxbook bilan kiring",secNote:"🔐 Biz faqat o'qish huquqiga egamiz.",mfxPassword:"MYFXBOOK PAROLI",success:"Muvaffaqiyatli!",successDesc:"Barcha hisoblaringiz sinxronlashtirildi.",toDashboard:"Dashboard ga o'tish →",subscribe:"Obuna bo'lish",close:"Yopish",allTimeRoi:"Jami ROI",trades:"Bitimlar",city:"Shahar",greet:"Assalomu alaykum",cancel:"Bekor qilish",joinLb:"Reytingga qo'shilish",watchOnly:"Qo'shilmasangiz ham kuzatishingiz mumkin",joinLbTitle:"Reytingga qo'shilish",confirmJoin:"Tasdiqlash",joinConfirm:"Qo'shilish ✓",joinedLb:"Reytingga qo'shildingiz!",joinedDesc:"Natijalaringiz har kuni yangilanadi.",great:"Zo'r! →",connectedAccounts:"Ulangan Hisoblar",pl1:"3 ta Kripto exchange",pl2:"3 ta Forex hisob",pl3:"1 ta Aksiya / CFD",pl4:"Statistika va tahlil",pl5:"Leaderboard",followingTab:"Obuna",followersTab:"Obunachilар",connectBroker:"Broker hisobingizni uling",brokerNumber:"Brokeringiz bergan raqam",onlyInvestor:"Faqat Investor parolini kiriting",multiAccNote:"💡 Bir nechta broker hisobingiz bo'lsa ham — hammasi avtomatik ko'rinadi.",foundAccounts:"Topilgan hisoblar",total:"Umumiy"},
+  ru:{totalBalance:"Общий Баланс",today:"сегодня",totalPnl:"Общая PnL",winRate:"Win Rate",positions:"Позиции",all:"Все",portfolio:"Портфель",live:"онлайн",openPos:"Открытые Позиции",seeAll:"все →",exchanges:"Биржи",connect:"Подключить",balanceGrowth:"Рост Баланса",balance:"Баланс",analytics:"Аналитика",allEx:"Все биржи · Этот месяц",drawdown:"Макс. Просадка",bestDay:"Лучший День",monthlyPnl:"Ежемесячная PnL",topPairs:"Лучшие Пары",globalRank:"Глобальный Рейтинг",rankSub:"Лучшие трейдеры месяца",thisMonth:"Этот Месяц",thisWeek:"Эта Неделя",allTime:"Всё Время",since:"с",thisMonth2:"Этот Месяц",followers:"Подписчики",following:"Подписки",editProfile:"Редактировать профиль",share:"Поделиться",following2:"Отслеживается",logout:"Выйти",home:"Главная",exNav:"Биржи",analyticsNav:"Аналитика",rating:"Рейтинг",profileNav:"Профиль",tagline:"ТРЕКЕР ПОРТФЕЛЯ · БЕСПЛАТНО",loginTab:"Войти",registerTab:"Регистрация",email:"Email",password:"Пароль",loginBtn:"Войти →",noAcc:"Нет аккаунта?",regLink:"Зарегистрироваться",name:"Имя",regBtn:"Создать аккаунт →",haveAcc:"Есть аккаунт?",loginLink:"Войти",copyright:"© 2025 kh.capital · Все права защищены",notifications:"Уведомления",system:"Система",n1:"🎉 kh.capital v2.0 вышел!",connectEx:"Подключить биржу",selectType:"Выберите тип",continue:"Продолжить →",back:"← Назад",connect2:"Подключить ✓",success:"Успешно!",toDashboard:"На главную →",subscribe:"Подписаться",close:"Закрыть",allTimeRoi:"Итого ROI",trades:"Сделки",city:"Город",greet:"Добро пожаловать",cancel:"Отмена",joinLb:"Вступить в рейтинг",connectedAccounts:"Подключённые аккаунты",pl1:"3 Crypto биржи",pl2:"3 Forex счёта",pl3:"1 Акции / CFD",pl4:"Статистика",pl5:"Лидерборд",followingTab:"Подписки",followersTab:"Подписчики",foundAccounts:"Найдено счетов",total:"Итого"},
+  en:{totalBalance:"Total Balance",today:"today",totalPnl:"Total PnL",winRate:"Win Rate",positions:"Positions",all:"All",portfolio:"Portfolio",live:"live",openPos:"Open Positions",seeAll:"see all →",exchanges:"Exchanges",connect:"Connect",balanceGrowth:"Balance Growth",balance:"Balance",analytics:"Analytics",allEx:"All exchanges · This month",drawdown:"Max Drawdown",bestDay:"Best Day",monthlyPnl:"Monthly PnL",topPairs:"Top Pairs",globalRank:"Global Rankings",rankSub:"Top traders this month",thisMonth:"This Month",thisWeek:"This Week",allTime:"All Time",since:"since",thisMonth2:"This Month",followers:"Followers",following:"Following",editProfile:"Edit Profile",share:"Share",following2:"Following",logout:"Sign out",home:"Home",exNav:"Exchanges",analyticsNav:"Analytics",rating:"Rankings",profileNav:"Profile",tagline:"PORTFOLIO TRACKER · FREE",loginTab:"Sign In",registerTab:"Register",email:"Email",password:"Password",loginBtn:"Sign In →",noAcc:"No account?",regLink:"Register",name:"Name",regBtn:"Create Account →",haveAcc:"Have an account?",loginLink:"Sign in",copyright:"© 2025 kh.capital · All rights reserved",notifications:"Notifications",system:"System",n1:"🎉 kh.capital v2.0 is out!",connectEx:"Connect Exchange",selectType:"Select account type",continue:"Continue →",back:"← Back",connect2:"Connect ✓",success:"Success!",toDashboard:"Go to Dashboard →",subscribe:"Follow",close:"Close",allTimeRoi:"Total ROI",trades:"Trades",city:"City",greet:"Welcome",cancel:"Cancel",joinLb:"Join Rankings",connectedAccounts:"Connected Accounts",pl1:"3 Crypto exchanges",pl2:"3 Forex accounts",pl3:"1 Stocks / CFD",pl4:"Statistics",pl5:"Leaderboard",followingTab:"Following",followersTab:"Followers",foundAccounts:"Accounts found",total:"Total"}
+};
+window.applyLang = function(l){
+  window._curLang=l;
+  ["langBtn","langBtn-desk"].forEach(id=>{ const e=document.getElementById(id); if(e) e.textContent=l.toUpperCase(); });
+  ["uz","ru","en"].forEach(x=>{ document.getElementById("lls-"+x)?.classList.toggle("active",x===l); document.getElementById("lo-"+x)?.classList.toggle("sel",x===l); });
+  const t=_T[l]||_T.uz;
+  document.querySelectorAll("[data-t]").forEach(el=>{ const v=t[el.getAttribute("data-t")]; if(v) el.textContent=v; });
+  const nm=(window._userData?.name||window._currentUser?.displayName||"").split(" ")[0];
+  ["greet"].forEach(id=>{ const e=document.getElementById(id); if(e) e.textContent=(t.greet||"Salom")+(nm?", "+nm:"")+" 👋"; });
+};
+window.setLang    = l  => window.applyLang(l);
+window.openLang   = () => document.getElementById("langPanel").classList.add("open");
+window.closeLang  = () => document.getElementById("langPanel").classList.remove("open");
+window.chooseLang = l  => { window.applyLang(l); setTimeout(window.closeLang,400); };
+
+// ── Exchange modal ──
+let _selT=null;
+window.openModal  = ()=>{ _resetModal(); document.getElementById("modal").classList.add("open"); };
+window.closeModal = ()=>document.getElementById("modal").classList.remove("open");
+window.closeOut   = e  =>{ if(e.target===document.getElementById("modal")) window.closeModal(); };
+function _resetModal(){ _selT=null; document.querySelectorAll("#mSheet .step-c").forEach(s=>s.classList.remove("active")); document.getElementById("mA")?.classList.add("active"); document.querySelectorAll("#mA .type-card").forEach(c=>c.classList.remove("sel")); document.querySelectorAll("#mA .type-chk").forEach(c=>c.textContent=""); document.getElementById("btnNext").disabled=true; }
+window.selType = function(t){ _selT=t; document.querySelectorAll("#mA .type-card").forEach(c=>c.classList.remove("sel")); document.querySelectorAll("#mA .type-chk").forEach(c=>c.textContent=""); document.getElementById("tc-"+t)?.classList.add("sel"); document.getElementById("chk-"+t).textContent="✓"; document.getElementById("btnNext").disabled=false; };
+window.goMB = function(){ if(!_selT) return; _showMStep(_selT==="c"?"mB-c":"mB-m"); if(_selT!=="c") window.showMs(1); };
+window.goMA = ()=>_showMStep("mA");
+function _showMStep(id){ document.querySelectorAll("#mSheet > .step-c").forEach(s=>s.classList.remove("active")); document.getElementById(id)?.classList.add("active"); document.getElementById("mSheet").scrollTop=0; }
+window.showMs = function(n){ document.querySelectorAll("#mB-m .step-c").forEach(s=>s.classList.remove("active")); document.getElementById("ms"+n)?.classList.add("active"); document.getElementById("mSheet").scrollTop=0; };
+window.togglePassphrase = val=>{ const r=document.getElementById("passphraseRow"); if(r) r.style.display=val==="bitget"?"block":"none"; };
+
+// ── Profil modal ──
+window.openProfModal = function(nm,av,bg,clr,roi,allroi,wr,fol,trades,badges,bio,city){
+  document.getElementById("pv-av").textContent=av; document.getElementById("pv-av").style.cssText=`background:${bg};color:${clr};border-color:${clr}30`;
+  document.getElementById("pv-nm").innerHTML=nm+' <span class="verified">✦</span>'; document.getElementById("pv-handle").textContent="@"+nm.toLowerCase().replace(/\s/,"")+" · "+city;
+  document.getElementById("pv-roi").textContent=roi; document.getElementById("pv-allroi").textContent=allroi; document.getElementById("pv-wr").textContent=wr;
+  document.getElementById("pv-fol").textContent=fol; document.getElementById("pv-trades").textContent=trades; document.getElementById("pv-city").textContent=city;
+  document.getElementById("pv-badges").innerHTML=badges.split(", ").map(b=>`<div class="pv-badge">${b}</div>`).join("");
+  document.getElementById("pv-bio").textContent=bio;
+  const fb=document.getElementById("pvFollowBtn"); if(fb){fb.dataset.on="0";fb.textContent="♥ Obuna bo'lish";fb.style.cssText="";}
+  document.getElementById("pvModal").classList.add("open");
+};
+window.closePvModal = ()=>document.getElementById("pvModal").classList.remove("open");
+window.toggleFollow = function(){ const b=document.getElementById("pvFollowBtn"),on=b.dataset.on==="1"; b.dataset.on=on?"0":"1"; if(!on){b.textContent="✓ Kuzatilmoqda";b.style.background="transparent";b.style.color="var(--gold)";b.style.border="1px solid rgba(201,168,76,0.3)";}else{b.textContent="♥ Obuna bo'lish";b.style.cssText="";} };
+
+// ── Boshqa UI ──
+window.setFtab = (el,tab)=>{ document.querySelectorAll(".ftab").forEach(t=>t.classList.remove("active")); el.classList.add("active"); document.getElementById("fol-following").style.display=tab==="following"?"block":"none"; document.getElementById("fol-followers").style.display=tab==="followers"?"block":"none"; };
+window.setLbTab    = el=>{ document.querySelectorAll(".lb-tab").forEach(t=>t.classList.remove("active")); el.classList.add("active"); window._loadLeaderboard?.(); };
+window.setLbMarket = (el,m)=>{ document.querySelectorAll(".lb-mtab").forEach(t=>t.classList.remove("active")); el.classList.add("active"); window._lbMarket=m; window._loadLeaderboard?.(); };
+window.shareProfile    = ()=>{ if(navigator.share){navigator.share({title:"kh.capital",url:location.href});}else{navigator.clipboard?.writeText(location.href);alert("Havola nusxalandi!");} };
+window.openEditProfile = ()=>alert("Tez orada qo'shiladi.");
+
+// ── Join LB ──
+let _jlbMarket=null;
+window.openJoinLb  = ()=>{ _jlbMarket=null; document.getElementById("jlb-step1").style.display="block"; document.getElementById("jlb-step2").style.display="none"; document.getElementById("jlb-success").style.display="none"; document.getElementById("jlbNextBtn").disabled=true; document.querySelectorAll("#jlb-step1 .type-card").forEach(c=>c.classList.remove("sel")); document.querySelectorAll("[id^=jchk-]").forEach(c=>c.textContent=""); document.getElementById("joinLbModal").classList.add("open"); };
+window.closeJoinLb = ()=>document.getElementById("joinLbModal").classList.remove("open");
+window.selJlb = (m,el)=>{ _jlbMarket=m; document.querySelectorAll("#jlb-step1 .type-card").forEach(c=>c.classList.remove("sel")); document.querySelectorAll("[id^=jchk-]").forEach(c=>c.textContent=""); el.classList.add("sel"); document.getElementById("jchk-"+m).textContent="✓"; document.getElementById("jlbNextBtn").disabled=false; };
+window.jlbNext = ()=>{ if(!_jlbMarket) return; document.getElementById("jlb-step1").style.display="none"; document.getElementById("jlb-step2").style.display="block"; const n={forex:"Forex",crypto:"Crypto",cfd:"CFD"}; document.getElementById("jlb-confirm-box").innerHTML=`<div style="font-size:0.68rem;color:var(--muted2);margin-bottom:4px">Bozor</div><div style="font-size:0.9rem;color:var(--white)">${n[_jlbMarket]}</div>`; };
+window.jlbBack    = ()=>{ document.getElementById("jlb-step1").style.display="block"; document.getElementById("jlb-step2").style.display="none"; };
+window.jlbConfirm = async ()=>{ document.getElementById("jlb-step2").style.display="none"; document.getElementById("jlb-success").style.display="block"; if(window._currentUser&&window.dbUpsertLeaderboard){ const tot=window.calcTotals?.(window._exchanges||[])||{balance:0,pnlTotal:0}; const roi=tot.balance>0?((tot.pnlTotal/(tot.balance-tot.pnlTotal))*100).toFixed(1)+"%":"0%"; await window.dbUpsertLeaderboard(window._currentUser.uid,{name:window._userData?.name||"Foydalanuvchi",city:window._userData?.city||"Toshkent",roi,allRoi:roi,winRate:(window._userData?.winRate||0)+"%",trades:window._userData?.trades||0,followers:window._userData?.followers||0,accountType:"real",market:_jlbMarket}); } };
+
+// ── Dashboard UI yangilash (ham mobile ham desktop) ──
+window.updateDashProfile = function(userData){
+  if(!userData) return;
+  const first=(userData.name||"").split(" ")[0], av=first.charAt(0).toUpperCase()||"A";
+  ["dashAvatar","mDashAvatar"].forEach(id=>{ const e=document.getElementById(id); if(e) e.textContent=av; });
+  ["profAvatar","mProfAvatar"].forEach(id=>{ const e=document.getElementById(id); if(e) e.textContent=av; });
+  ["profName","mProfName"].forEach(id=>{ const e=document.getElementById(id); if(e) e.textContent=userData.name||"—"; });
+  const yr=userData.joinedAt?new Date(userData.joinedAt).getFullYear():2025;
+  const h=`@${(userData.name||"").toLowerCase().replace(/\s+/g,"")} · ${userData.city||"Toshkent"} · ${yr} dan`;
+  ["profHandle","mProfHandle"].forEach(id=>{ const e=document.getElementById(id); if(e) e.textContent=h; });
+  if(userData.winRate){ ["profWin","mProfWin"].forEach(id=>{ const e=document.getElementById(id); if(e) e.textContent=userData.winRate+"%" }); }
+  if(userData.followers!==undefined){ ["profFollowers","mProfFollowers"].forEach(id=>{ const e=document.getElementById(id); if(e) e.textContent=userData.followers }); }
+  if(userData.following!==undefined){ ["profFollowing","mProfFollowing"].forEach(id=>{ const e=document.getElementById(id); if(e) e.textContent=userData.following }); }
+  window.applyLang(window._curLang);
+};
+
+window.updateDashBalance = function(exchanges){
+  let bal=0, totalPnl=0, openPnl=0, todayPnl=0, pos=0, totalWinRate=0, totalDD=0, exCount=0;
+
+  exchanges.forEach(ex=>{
+    bal       += ex.balance||0;
+    totalPnl  += ex.pnl||0;          // barcha vaqt jami PnL
+    openPnl   += ex.openPnl||0;      // hozirgi ochiq pozitsiyalar PnL
+    todayPnl  += ex.todayPnl||0;     // bugungi yopilgan bitimlar PnL
+    pos       += (ex.openPositions||[]).length;
+    if(ex.winRate){ totalWinRate+=ex.winRate; exCount++; }
+    if(ex.drawdown){ totalDD=Math.max(totalDD, ex.drawdown||0); }
+  });
+
+  const avgWR = exCount>0 ? (totalWinRate/exCount).toFixed(0)+'%' : '—';
+
+  function fmt(v, prefix='$'){
+    if(v===0||v===undefined||v===null) return '—';
+    const sign = v>0?'+':'-';
+    const abs = Math.abs(v).toLocaleString("en",{maximumFractionDigits:0});
+    return sign+prefix+abs;
+  }
+  function fmtClass(v){ return v>0?'up':v<0?'dn':''; }
+
+  const fmtBal = bal.toLocaleString("en",{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  // Mobile — Balans
+  const bm=document.getElementById("balAmt"); if(bm) bm.textContent=fmtBal;
+
+  // Mobile — 3 PnL satri
+  const todayEl=document.getElementById("todayPnl");
+  if(todayEl){ todayEl.textContent=fmt(todayPnl); todayEl.className="bal-pnl-val "+(fmtClass(todayPnl)); }
+
+  const openEl=document.getElementById("openPnl");
+  if(openEl){ openEl.textContent=fmt(openPnl); openEl.className="bal-pnl-val "+(fmtClass(openPnl)); }
+
+  const totalEl=document.getElementById("totalPnlNew");
+  if(totalEl){ totalEl.textContent=fmt(totalPnl); totalEl.className="bal-pnl-val "+(fmtClass(totalPnl)); }
+
+  // Mobile — quyi grid
+  const posm=document.getElementById("posStat"); if(posm) posm.textContent=pos||0;
+  const wrm=document.getElementById("winRateStat"); if(wrm) wrm.textContent=avgWR;
+  const ddm=document.getElementById("drawdownStat"); if(ddm){ ddm.textContent=totalDD>0?'-'+totalDD.toFixed(1)+'%':'—'; }
+
+  // Mobile counter
+  const cntm=document.getElementById("mExConnCount"); if(cntm) cntm.textContent=exchanges.length+" ta ulangan";
+
+  // Desktop (o'zgarmaydi)
+  const bd=document.getElementById("d-balAmt"); if(bd) bd.textContent=fmtBal;
+  const pd=document.getElementById("d-pnlTotal"); if(pd){ pd.textContent=fmt(totalPnl); pd.className="bal-g-v "+(fmtClass(totalPnl)); }
+  const posd=document.getElementById("d-posStat"); if(posd) posd.textContent=pos+" ta";
+  const cntd=document.getElementById("exConnCount"); if(cntd) cntd.textContent=exchanges.length+" ta ulangan";
+
+  // Pills
+  const pillsEl=document.getElementById("dashPills");
+  if(pillsEl&&exchanges.length>0){
+    const clr={binance:"#f0b90b",bitget:"#00c896",bybit:"#e6b800",exness:"#0099e6"};
+    pillsEl.innerHTML=`<div class="ex-pill on"><div class="ex-dot" style="background:var(--gold)"></div><span>Barchasi</span></div>`
+      +exchanges.map(ex=>`<div class="ex-pill"><div class="ex-dot" style="background:${clr[ex.name?.toLowerCase()]||"#888"}"></div>${ex.name}</div>`).join("");
+  }
+};
+
+// ── Charts ──
+window.drawPortChart = function(data){
+  ["portChart","portChartM"].forEach(id=>{
+    const ctx=document.getElementById(id); if(!ctx) return;
+    if(window["_pc_"+id]) window["_pc_"+id].destroy();
+    const labels=data?.labels||["1","5","10","15","20","25","30"], values=data?.values||[0,0,0,0,0,0,0];
+    window["_pc_"+id]=new Chart(ctx,{type:"line",data:{labels,datasets:[{data:values,borderColor:"#c9a84c",borderWidth:2,tension:0.4,pointRadius:0,fill:true,backgroundColor:c=>{const g=c.chart.ctx.createLinearGradient(0,0,0,160);g.addColorStop(0,"rgba(201,168,76,0.15)");g.addColorStop(1,"rgba(201,168,76,0)");return g;}}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:600},plugins:{legend:{display:false},tooltip:{backgroundColor:"#0f0f0f",borderColor:"rgba(255,255,255,0.08)",borderWidth:1,titleColor:"#666",bodyColor:"#f0ece4",padding:9}},scales:{x:{grid:{display:false},ticks:{color:"#444",font:{family:"DM Mono",size:8}}},y:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#555",font:{family:"DM Mono",size:8},callback:v=>"$"+(v>=1000?(v/1000).toFixed(1)+"k":v)}}}}});
+  });
+};
+window.drawMultiChart = function(exchanges){
+  ["multiChart","multiChartM"].forEach(id=>{
+    const ctx=document.getElementById(id); if(!ctx) return;
+    if(window["_mc_"+id]) window["_mc_"+id].destroy();
+    const months=["Yan","Fev","Mar","Apr","May","Iyn","Iyl","Avg","Sen","Okt","Noy","Dek"];
+    const clr={binance:"#f0b90b",bitget:"#00c896",bybit:"#e6b800",exness:"#0099e6"};
+    if(!exchanges||exchanges.length===0){ window["_mc_"+id]=new Chart(ctx,{type:"line",data:{labels:months.slice(0,6),datasets:[]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#444",font:{size:8}}},y:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#555",font:{size:8}}}}}}); return; }
+    const ds=exchanges.map(ex=>({label:ex.name,data:ex.history||Array(6).fill(ex.balance||0),borderColor:clr[ex.name?.toLowerCase()]||"#888",borderWidth:1.5,tension:0.4,pointRadius:0,fill:false}));
+    const lg=document.getElementById(id==="multiChart"?"multiChartLegend":"mMultiLegend"); if(lg) lg.innerHTML=exchanges.map((ex,i)=>`<span style="color:${ds[i].borderColor}">— ${ex.name}</span>`).join("");
+    window["_mc_"+id]=new Chart(ctx,{type:"line",data:{labels:months.slice(0,6),datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:"#0f0f0f",borderColor:"rgba(255,255,255,0.08)",borderWidth:1,titleColor:"#666",bodyColor:"#f0ece4",padding:9,mode:"index",intersect:false}},scales:{x:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#555",font:{family:"DM Mono",size:8},maxTicksLimit:6}},y:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#555",font:{family:"DM Mono",size:8},callback:v=>"$"+(v/1000).toFixed(0)+"k"}}}}});
+  });
+};
+window.drawMonthlyChart = function(data){
+  ["monthlyChart","monthlyChartM"].forEach(id=>{
+    const ctx=document.getElementById(id); if(!ctx) return;
+    if(window["_mch_"+id]) window["_mch_"+id].destroy();
+    const months=["Yan","Fev","Mar","Apr","May","Iyn","Iyl","Avg","Sen","Okt","Noy","Dek"];
+    const labels=data?.length>0?data.map(d=>months[(d.month||1)-1]):months.slice(0,6);
+    const values=data?.length>0?data.map(d=>d.pnl||0):[0,0,0,0,0,0];
+    window["_mch_"+id]=new Chart(ctx,{type:"bar",data:{labels,datasets:[{data:values,backgroundColor:values.map(v=>v>=0?"rgba(0,212,170,0.5)":"rgba(255,77,109,0.5)"),borderColor:values.map(v=>v>=0?"#00d4aa":"#ff4d6d"),borderWidth:1,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:"#0f0f0f",borderColor:"rgba(255,255,255,0.08)",borderWidth:1,titleColor:"#666",bodyColor:"#f0ece4",padding:9}},scales:{x:{grid:{display:false},ticks:{color:"#555",font:{family:"DM Mono",size:8}}},y:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#555",font:{family:"DM Mono",size:8},callback:v=>(v>=0?"+":"")+"$"+Math.abs(v).toLocaleString("en")}}}}});
+  });
+};
+window.renderTopPairs = function(pairs){
+  ["topPairsList","mTopPairsList"].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    if(!pairs||pairs.length===0){ el.innerHTML=`<div class="pair-row"><div class="pair-rank">—</div><div class="pair-nm" style="color:var(--muted)">Exchange ulanmagan</div></div>`; return; }
+    const max=Math.max(...pairs.map(p=>Math.abs(p.pnl||0)),1);
+    el.innerHTML=pairs.slice(0,5).map((p,i)=>`<div class="pair-row"><div class="pair-rank">${i+1}</div><div class="pair-nm">${p.pair}</div><div class="pair-bar"><div class="pair-fill" style="width:${Math.abs(p.pnl||0)/max*100}%"></div></div><div class="pair-pnl ${p.pnl>=0?"up":"dn"}">${p.pnl>=0?"+":""}$${Math.abs(p.pnl||0).toLocaleString("en")}</div></div>`).join("");
+  });
+};
+window.updateAnalyticsStats = function(d){
+  // Desktop (o'zgarmaydi)
+  const fmt=v=>(v>=0?"+":"")+"$"+Math.abs(v||0).toLocaleString("en");
+  [["anPnl"],["anWin"],["anDD"],["anBest"]].forEach(([a])=>{
+    const el=document.getElementById(a); if(!el) return;
+    if(a.includes("Pnl")) { el.textContent=fmt(d.pnl); el.className="stat-box-v "+(d.pnl>=0?"up":"dn"); }
+    else if(a.includes("Best")) { el.textContent=fmt(d.bestDay); el.className="stat-box-v "+(d.bestDay>=0?"up":"dn"); }
+    else if(a.includes("Win")) el.textContent=(d.winRate||0)+"%";
+    else if(a.includes("DD")) el.textContent=(d.drawdown||0)+"%";
+  });
+  // Mobile — Win Rate va Drawdown balans kartasida yangilanadi (updateDashBalance orqali)
+};
+
+document.querySelectorAll(".ct").forEach(c=>{ c.addEventListener("click",function(){ this.closest(".ctabs").querySelectorAll(".ct").forEach(x=>x.classList.remove("active")); this.classList.add("active"); }); });
+</script>
+
+<!-- Firebase + App scripts (1-6 qismlarni shu yerga qo'shing) -->
+<!-- Firebase CDN -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+// Firebase config
+firebase.initializeApp({
+  apiKey: "AIzaSyDaeBm79U5OD6zKn3C61V67Z9yXDAPTba8",
+  authDomain: "khcapital-eb4a4.firebaseapp.com",
+  projectId: "khcapital-eb4a4",
+  storageBucket: "khcapital-eb4a4.firebasestorage.app",
+  messagingSenderId: "298127050155",
+  appId: "1:298127050155:web:fbf3f68a6560f16ef9beee",
+  databaseURL: "https://khcapital-eb4a4-default-rtdb.firebaseio.com"
+});
+
+const auth = firebase.auth();
+const db   = firebase.database();
+
+// ── LOGIN ──
+window.handleLogin = async function(){
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-err');
+  const btn   = document.getElementById('login-btn');
+
+  function showErr(msg){ errEl.textContent = msg; errEl.style.display = 'block'; }
+  function hideErr(){ errEl.textContent = ''; errEl.style.display = 'none'; }
+
+  if(!email || !pass){ showErr("Email va parol kiriting"); return; }
+  hideErr();
+  btn.textContent = "Kirilmoqda..."; btn.disabled = true;
+  try {
+    const cred = await auth.signInWithEmailAndPassword(email, pass);
+    const snap = await db.ref('users/' + cred.user.uid).get();
+    if(snap.exists()) window._userData = snap.val();
+    hideErr();
+  } catch(e) {
+    btn.textContent = "Kirish →"; btn.disabled = false;
+    if(e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential')
+      showErr("Email yoki parol noto'g'ri");
+    else if(e.code === 'auth/too-many-requests')
+      showErr("Juda ko'p urinish. Biroz kuting");
+    else showErr("Xatolik: " + e.code);
+  }
+};
+
+// ── REGISTER ──
+window.handleRegister = async function(){
+  const name  = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pass  = document.getElementById('reg-pass').value;
+  const errEl = document.getElementById('reg-err');
+  const btn   = document.getElementById('reg-btn');
+
+  function showErr(msg){ errEl.textContent = msg; errEl.style.display = 'block'; }
+  function hideErr(){ errEl.textContent = ''; errEl.style.display = 'none'; }
+
+  if(!name)  { showErr("Ismingizni kiriting"); return; }
+  if(!email) { showErr("Email kiriting"); return; }
+  if(pass.length < 6){ showErr("Parol kamida 6 ta belgi bo'lishi kerak"); return; }
+  hideErr();
+  btn.textContent = "Ro'yxatdan o'tilmoqda..."; btn.disabled = true;
+  try {
+    const cred = await auth.createUserWithEmailAndPassword(email, pass);
+    const userData = {
+      name, email,
+      city: "Toshkent",
+      joinedAt: Date.now(),
+      winRate: 0, trades: 0, followers: 0, following: 0
+    };
+    await db.ref('users/' + cred.user.uid).set(userData);
+    window._userData = userData;
+    hideErr();
+  } catch(e) {
+    btn.textContent = "Ro'yxatdan o'tish →"; btn.disabled = false;
+    if(e.code === 'auth/email-already-in-use')
+      showErr("Bu email allaqachon ro'yxatdan o'tgan");
+    else if(e.code === 'auth/invalid-email')
+      showErr("Email noto'g'ri formatda");
+    else if(e.code === 'auth/weak-password')
+      showErr("Parol juda oddiy");
+    else showErr("Xatolik: " + e.code);
+  }
+};
+
+// ── LOGOUT ──
+window.handleLogout = async function(){
+  await auth.signOut();
+};
+
+// ── AUTH STATE ──
+auth.onAuthStateChanged(async function(user){
+  const loading   = document.getElementById('loading');
+  const loginPage = document.getElementById('loginPage');
+  const appEl     = document.getElementById('app');
+  const phone     = document.querySelector('.phone');
+
+  if(user){
+    if(!window._userData){
+      try{
+        const snap = await db.ref('users/' + user.uid).get();
+        if(snap.exists()) window._userData = snap.val();
+      }catch(e){ console.log("userData xato:", e); }
+    }
+    window._currentUser = user;
+    if(window.updateDashProfile && window._userData)
+      window.updateDashProfile(window._userData);
+
+    if(loading)  { loading.style.opacity='0'; setTimeout(()=>loading.style.display='none',500); }
+    if(loginPage)  loginPage.style.display='none';
+    if(appEl)      appEl.style.display='flex';
+    if(phone)      phone.style.display='flex';
+
+  } else {
+    window._currentUser = null;
+    window._userData    = null;
+    if(loading)  { loading.style.opacity='0'; setTimeout(()=>loading.style.display='none',500); }
+    if(loginPage)  loginPage.style.display='flex';
+    if(appEl)      appEl.style.display='none';
+    if(phone)      phone.style.display='none';
+  }
+});
+</script>
+
+<!-- ═══════════════════════════════════════════════════════
+     JAMOAM — CSS
+═══════════════════════════════════════════════════════ -->
+<style>
+/* Dashboard Jamoam tugmasi */
+.team-dash-btn   { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; width:52px; height:52px; background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.04)); border:1px solid rgba(201,168,76,0.25); border-radius:14px; cursor:pointer; transition:all .2s; }
+.team-dash-btn:active { background:rgba(201,168,76,0.2); }
+.team-dash-ico   { font-size:1.1rem; line-height:1; color:var(--gold); }
+.team-dash-lbl   { font-family:var(--mono); font-size:0.42rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--gold); }
+.team-dash-badge { position:absolute; top:-5px; right:-5px; min-width:17px; height:17px; background:var(--red); color:#fff; border-radius:9px; font-family:var(--mono); font-size:0.48rem; display:flex; align-items:center; justify-content:center; padding:0 4px; border:2px solid var(--bg); }
+
+/* ── TEAMS HUB (full-screen overlay) ── */
+.thub             { position:fixed; inset:0; background:var(--bg); z-index:600; display:none; flex-direction:column; }
+.thub.open        { display:flex; animation:fu .22s ease both; }
+.thub-hdr         { display:flex; align-items:center; gap:10px; padding:calc(14px + env(safe-area-inset-top)) 18px 0; flex-shrink:0; }
+.thub-back        { background:none; border:none; color:var(--muted2); font-size:1.1rem; cursor:pointer; padding:2px 10px 2px 0; line-height:1; }
+.thub-title       { font-family:var(--serif); font-size:1.3rem; font-weight:300; letter-spacing:0.1em; color:var(--white); flex:1; }
+.thub-add-btn     { padding:7px 14px; background:var(--gold); color:#050505; border:none; border-radius:9px; font-family:var(--mono); font-size:0.65rem; font-weight:500; cursor:pointer; }
+
+/* Tab bar */
+.thub-tabs        { display:flex; border-bottom:1px solid var(--border); margin-top:14px; }
+.thub-tab         { flex:1; padding:11px 8px; background:none; border:none; border-bottom:2px solid transparent; font-family:var(--mono); font-size:0.67rem; color:var(--muted); cursor:pointer; letter-spacing:0.04em; transition:all .2s; position:relative; }
+.thub-tab.active  { color:var(--white); border-bottom-color:var(--gold); }
+.thub-tab-badge   { position:absolute; top:6px; right:10px; min-width:15px; height:15px; background:var(--red); color:#fff; border-radius:8px; font-size:0.45rem; display:flex; align-items:center; justify-content:center; padding:0 3px; }
+.thub-pane        { display:none; flex:1; overflow-y:auto; }
+.thub-pane::-webkit-scrollbar { display:none; }
+.thub-pane.active { display:block; }
+
+/* Jamoa kartasi (hub listda) */
+.tj-card          { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; margin:12px 18px 0; cursor:pointer; transition:border-color .15s; }
+.tj-card:active   { border-color:var(--border2); }
+.tj-card-top      { display:flex; align-items:center; gap:12px; padding:14px 16px; }
+.tj-ico           { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg,rgba(201,168,76,0.14),rgba(201,168,76,0.03)); border:1px solid rgba(201,168,76,0.2); display:flex; align-items:center; justify-content:center; font-size:1.15rem; flex-shrink:0; }
+.tj-info          { flex:1; min-width:0; }
+.tj-nm            { font-size:0.86rem; color:var(--white); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tj-meta          { font-size:0.6rem; color:var(--muted2); margin-top:3px; display:flex; align-items:center; gap:6px; }
+.tj-role          { font-size:0.52rem; padding:1px 6px; border-radius:3px; font-weight:500; letter-spacing:0.07em; }
+.tj-role.owner    { background:rgba(201,168,76,0.12); color:var(--gold); border:1px solid rgba(201,168,76,0.2); }
+.tj-role.member   { background:rgba(77,159,255,0.1);  color:var(--blue); border:1px solid rgba(77,159,255,0.2); }
+.tj-role.pending  { background:rgba(245,200,66,0.1);  color:var(--amber);border:1px solid rgba(245,200,66,0.2); }
+.tj-arr           { color:var(--muted); font-size:0.9rem; }
+.tj-stats         { display:grid; grid-template-columns:repeat(3,1fr); border-top:1px solid var(--border); }
+.tjs              { padding:8px 10px; text-align:center; border-right:1px solid var(--border); }
+.tjs:last-child   { border-right:none; }
+.tjs-v            { font-size:0.82rem; font-family:var(--serif); font-weight:300; color:var(--white); }
+.tjs-l            { font-size:0.49rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-top:1px; }
+
+/* Tanlov ekrani (jamoa yo'q bo'lganda hub ichida) */
+.thub-choice      { padding:24px 18px; display:flex; flex-direction:column; gap:12px; }
+.thub-choice-card { display:flex; align-items:center; gap:16px; padding:18px 16px; background:var(--bg2); border:1px solid var(--border); border-radius:14px; cursor:pointer; transition:all .15s; }
+.thub-choice-card:active { border-color:var(--border2); background:var(--bg3); }
+.thub-choice-ico  { width:46px; height:46px; border-radius:13px; display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0; }
+.thub-choice-info { flex:1; }
+.thub-choice-nm   { font-size:0.88rem; color:var(--white); margin-bottom:3px; }
+.thub-choice-sub  { font-size:0.65rem; color:var(--muted2); line-height:1.5; }
+.thub-choice-arr  { color:var(--muted); font-size:1rem; }
+
+/* ── JAMOA DETAIL (full-screen, ichki) ── */
+.tdet             { position:fixed; inset:0; background:var(--bg); z-index:620; display:none; flex-direction:column; }
+.tdet.open        { display:flex; animation:fu .2s ease both; }
+.tdet-hdr         { display:flex; align-items:center; gap:10px; padding:calc(14px + env(safe-area-inset-top)) 16px 12px; background:rgba(8,8,8,0.97); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); flex-shrink:0; }
+.tdet-back        { background:none; border:none; color:var(--muted2); font-size:1.1rem; cursor:pointer; padding:2px 8px 2px 0; line-height:1; }
+.tdet-title       { font-family:var(--serif); font-size:1.1rem; font-weight:300; color:var(--white); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tdet-code-btn    { font-family:var(--mono); font-size:0.57rem; color:var(--gold); letter-spacing:0.08em; background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.2); border-radius:5px; padding:4px 9px; cursor:pointer; white-space:nowrap; }
+
+/* Detail tabs */
+.tdet-tabs        { display:flex; border-bottom:1px solid var(--border); background:var(--bg); position:sticky; top:0; z-index:10; flex-shrink:0; }
+.tdet-tab         { flex:1; padding:12px 6px; background:none; border:none; border-bottom:2px solid transparent; font-family:var(--mono); font-size:0.64rem; color:var(--muted); cursor:pointer; letter-spacing:0.04em; transition:all .2s; position:relative; }
+.tdet-tab.active  { color:var(--white); border-bottom-color:var(--gold); }
+.tdet-rbadge      { position:absolute; top:5px; right:8px; min-width:15px; height:15px; background:var(--red); color:#fff; border-radius:8px; font-size:0.44rem; display:flex; align-items:center; justify-content:center; padding:0 3px; }
+.tdet-body        { flex:1; overflow-y:auto; }
+.tdet-body::-webkit-scrollbar { display:none; }
+.tdet-pane        { display:none; }
+.tdet-pane.active { display:block; }
+
+/* Promokod card */
+.tdet-code-card   { margin:14px 16px; background:linear-gradient(135deg,rgba(201,168,76,0.07),rgba(201,168,76,0.02)); border:1px solid rgba(201,168,76,0.18); border-radius:14px; padding:16px 18px; }
+.tdet-code-lbl    { font-size:0.55rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
+.tdet-code-val    { font-family:var(--mono); font-size:1.05rem; letter-spacing:0.15em; color:var(--white); margin-bottom:12px; word-break:break-all; line-height:1.6; }
+.tdet-code-copy   { display:flex; align-items:center; justify-content:center; gap:7px; padding:10px; background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.22); border-radius:9px; cursor:pointer; font-family:var(--mono); font-size:0.67rem; color:var(--gold); }
+
+/* A'zo satri */
+.tm-row           { display:flex; align-items:center; gap:11px; padding:12px 16px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .12s; }
+.tm-row:last-child{ border-bottom:none; }
+.tm-row:active    { background:var(--bg3); }
+.tm-av            { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-family:var(--serif); font-size:0.9rem; flex-shrink:0; }
+.tm-info          { flex:1; min-width:0; }
+.tm-nm            { font-size:0.78rem; color:var(--white); display:flex; align-items:center; gap:5px; }
+.tm-sub           { font-size:0.6rem; color:var(--muted2); margin-top:2px; }
+.tm-roi           { font-size:0.78rem; font-weight:500; }
+.tm-owner-tag     { font-size:0.47rem; padding:1px 5px; background:rgba(201,168,76,0.1); color:var(--gold); border:1px solid rgba(201,168,76,0.2); border-radius:3px; }
+
+/* So'rov satri */
+.req-row          { display:flex; align-items:center; gap:11px; padding:13px 16px; border-bottom:1px solid var(--border); }
+.req-row:last-child{ border-bottom:none; }
+.req-info         { flex:1; min-width:0; }
+.req-nm           { font-size:0.78rem; color:var(--white); }
+.req-sub          { font-size:0.6rem; color:var(--muted2); margin-top:2px; }
+.req-btns         { display:flex; gap:6px; flex-shrink:0; }
+.req-acc          { padding:7px 12px; background:rgba(0,212,170,0.1); border:1px solid rgba(0,212,170,0.22); border-radius:8px; color:var(--green); font-family:var(--mono); font-size:0.62rem; cursor:pointer; }
+.req-rej          { padding:7px 12px; background:rgba(255,77,109,0.07); border:1px solid rgba(255,77,109,0.18); border-radius:8px; color:var(--red); font-family:var(--mono); font-size:0.62rem; cursor:pointer; }
+
+/* A'zo profil sheet */
+.mem-ov           { position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); z-index:750; display:none; align-items:flex-end; justify-content:center; }
+.mem-ov.open      { display:flex; }
+.mem-sheet        { width:100%; max-width:520px; background:var(--bg2); border-radius:28px 28px 0 0; border-top:1px solid var(--border2); padding:16px 20px calc(32px + env(safe-area-inset-bottom)); max-height:88vh; overflow-y:auto; animation:slideUp .28s ease; }
+.mem-sheet::-webkit-scrollbar { display:none; }
+.mem-hero         { display:flex; align-items:center; gap:14px; margin-bottom:16px; padding-bottom:16px; border-bottom:1px solid var(--border); }
+.mem-av-lg        { width:52px; height:52px; border-radius:16px; display:flex; align-items:center; justify-content:center; font-family:var(--serif); font-size:1.4rem; flex-shrink:0; }
+.mem-hero-nm      { font-family:var(--serif); font-size:1.1rem; font-weight:300; color:var(--white); display:flex; align-items:center; gap:6px; }
+.mem-hero-sub     { font-size:0.62rem; color:var(--muted2); margin-top:3px; }
+.mem-sg           { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
+.mem-sc           { background:var(--bg3); border:1px solid var(--border); border-radius:10px; padding:11px 13px; }
+.mem-sc-v         { font-size:0.9rem; font-family:var(--serif); font-weight:300; }
+.mem-sc-l         { font-size:0.51rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-top:2px; }
+.mem-acc-row      { display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--bg3); border:1px solid var(--border); border-radius:10px; margin-bottom:6px; }
+.mem-acc-ico      { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:0.6rem; font-weight:600; flex-shrink:0; }
+.mem-acc-nm       { font-size:0.75rem; color:var(--white); }
+.mem-acc-sub      { font-size:0.58rem; color:var(--muted2); margin-top:1px; }
+.mem-kick-btn     { width:100%; padding:13px; background:rgba(255,77,109,0.06); border:1px solid rgba(255,77,109,0.18); border-radius:12px; font-family:var(--mono); font-size:0.72rem; color:var(--red); cursor:pointer; margin-top:4px; }
+
+/* Parol tasdiqlash */
+.pass-ov          { position:fixed; inset:0; background:rgba(0,0,0,0.82); backdrop-filter:blur(10px); z-index:800; display:none; align-items:flex-end; justify-content:center; }
+.pass-ov.open     { display:flex; }
+.pass-sheet       { width:100%; max-width:520px; background:var(--bg2); border-radius:28px 28px 0 0; border-top:1px solid var(--border2); padding:16px 20px calc(28px + env(safe-area-inset-bottom)); animation:slideUp .28s ease; }
+
+/* Kichik sheet modal (nom, kod, hisob tanlash) */
+.sm-ov            { position:fixed; inset:0; background:rgba(0,0,0,0.78); backdrop-filter:blur(9px); z-index:700; display:none; align-items:flex-end; justify-content:center; }
+.sm-ov.open       { display:flex; }
+.sm-sheet         { width:100%; max-width:520px; background:var(--bg2); border-radius:28px 28px 0 0; border-top:1px solid var(--border2); padding:16px 20px calc(28px + env(safe-area-inset-bottom)); animation:slideUp .28s ease; }
+.sm-title         { font-family:var(--serif); font-size:1.18rem; font-weight:300; letter-spacing:0.05em; color:var(--white); margin-bottom:4px; }
+.sm-sub           { font-size:0.67rem; color:var(--muted2); line-height:1.55; margin-bottom:16px; }
+.sm-field label   { display:block; font-size:0.57rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); margin-bottom:5px; }
+.sm-field input   { width:100%; background:var(--bg3); border:1px solid var(--border2); border-radius:8px; padding:12px 14px; color:var(--white); font-family:var(--mono); font-size:0.85rem; outline:none; transition:border-color .2s; }
+.sm-field input:focus { border-color:var(--gold); }
+.sm-err           { display:none; font-size:0.67rem; color:var(--red); padding:8px 12px; background:rgba(255,77,109,0.07); border:1px solid rgba(255,77,109,0.14); border-radius:8px; }
+
+/* Hisob tanlash */
+.acc-item         { display:flex; align-items:center; gap:12px; padding:13px 16px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .12s; }
+.acc-item:last-child { border-bottom:none; }
+.acc-item:active  { background:var(--bg3); }
+.acc-ico          { width:36px; height:36px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:0.62rem; font-weight:600; flex-shrink:0; }
+.acc-info         { flex:1; min-width:0; }
+.acc-nm           { font-size:0.78rem; color:var(--white); }
+.acc-sub          { font-size:0.6rem; color:var(--muted2); margin-top:2px; }
+.acc-chk          { width:19px; height:19px; border-radius:50%; border:1.5px solid var(--border2); display:flex; align-items:center; justify-content:center; font-size:0.62rem; flex-shrink:0; transition:all .15s; }
+.acc-chk.on       { background:var(--gold); border-color:var(--gold); color:#000; }
+
+/* So'rov kutilmoqda banner */
+.pending-banner   { margin:12px 18px 0; padding:13px 16px; background:rgba(245,200,66,0.06); border:1px solid rgba(245,200,66,0.2); border-radius:12px; display:flex; align-items:center; gap:12px; }
+.pending-dot      { width:8px; height:8px; border-radius:50%; background:var(--amber); animation:pulse 1.6s infinite; flex-shrink:0; }
+.pending-txt      { font-size:0.68rem; color:var(--amber); line-height:1.5; }
+</style>
+
+<!-- ═══════════════════════════════════════════════════════
+     JAMOAM — HTML MODALLARI
+═══════════════════════════════════════════════════════ -->
+
+<!-- TEAMS HUB (asosiy full-screen) -->
+<div class="thub" id="teamsHub">
+  <div class="thub-hdr">
+    <button class="thub-back" onclick="closeTeamsHub()">←</button>
+    <div class="thub-title">Jamoam</div>
+    <button class="thub-add-btn" onclick="openCreateFlow()">+ Jamoa</button>
+  </div>
+  <div class="thub-tabs" id="thubTabs">
+    <button class="thub-tab active" id="tht-list" onclick="setThubTab('list')">Jamoalarim</button>
+    <button class="thub-tab" id="tht-join" onclick="setThubTab('join')">Qo'shilish</button>
+  </div>
+  <!-- Jamoalar ro'yxati -->
+  <div class="thub-pane active" id="thp-list" style="padding-bottom:30px">
+    <div id="hubTeamsList"></div>
+  </div>
+  <!-- Qo'shilish tab — inline join flow -->
+  <div class="thub-pane" id="thp-join" style="padding:20px 18px 30px">
+
+    <!-- Yuborilgan so'rovlar (pending) -->
+    <div id="pendingRequestsSection" style="display:none;margin-bottom:20px">
+      <div class="lbl" style="margin-bottom:10px">Yuborilgan so'rovlar</div>
+      <div id="pendingRequestsList"></div>
+    </div>
+
+    <div style="font-family:var(--serif);font-size:1.05rem;font-weight:300;color:var(--white);margin-bottom:5px">Jamoaga qo'shilish</div>
+    <div style="font-size:0.67rem;color:var(--muted2);line-height:1.55;margin-bottom:18px">Rahbardan olgan 15 belgili promokodni kiriting. So'rovingiz yuborilgandan so'ng rahbar qabul qilgunicha kutasiz.</div>
+
+    <!-- Qadam 1: Kod -->
+    <div id="joinStep1Div">
+      <div class="sm-field" style="margin-bottom:12px">
+        <label>Promokod</label>
+        <input type="text" id="joinTabCode" placeholder="a1B2c3D4e5F6g7H" maxlength="15"
+          style="letter-spacing:0.13em;text-align:center;font-size:0.92rem">
+      </div>
+      <div class="sm-err" id="joinTabCodeErr" style="margin-bottom:12px"></div>
+      <button class="btn-g" style="width:100%" onclick="doJoinTabStep1()">Davom etish →</button>
+    </div>
+
+    <!-- Qadam 2: Hisob tanlash (boshlangʼichda yashirin) -->
+    <div id="joinStep2Div" style="display:none">
+      <div style="font-size:0.75rem;color:var(--white);margin-bottom:4px">Hisob tanlang</div>
+      <div style="font-size:0.65rem;color:var(--muted2);margin-bottom:12px">Qaysi ulangan hisobingiz statistikasi jamoada ko'rinsin?</div>
+      <div id="joinTabAccList" style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px"></div>
+      <div class="sm-err" id="joinTabAccErr" style="margin-bottom:12px"></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn-ghost" style="flex:0 0 auto;padding:11px 16px" onclick="resetJoinTab()">← Orqaga</button>
+        <button class="btn-g" style="flex:1;padding:11px" onclick="doJoinTabStep2()">So'rov yuborish →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JAMOA DETAIL (full-screen) -->
+<div class="tdet" id="teamDet">
+  <div class="tdet-hdr">
+    <button class="tdet-back" onclick="closeTeamDet()">←</button>
+    <div class="tdet-title" id="tdetTitle">Jamoa</div>
+    <button class="tdet-code-btn" id="tdetCodeBtn" onclick="copyDetCode()">nusxalash</button>
+  </div>
+  <div style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+    <div class="tdet-tabs">
+      <button class="tdet-tab active" id="tdt-members" onclick="setTdetTab('members')">A'zolar</button>
+      <button class="tdet-tab" id="tdt-requests" onclick="setTdetTab('requests')" style="display:none">
+        So'rovlar<span class="tdet-rbadge" id="tdetReqBadge" style="display:none">0</span>
+      </button>
+      <button class="tdet-tab" id="tdt-info" onclick="setTdetTab('info')">Ma'lumot</button>
+    </div>
+    <div class="tdet-body">
+      <div class="tdet-pane active" id="tdp-members"><div id="tdetMembersList"></div></div>
+      <div class="tdet-pane" id="tdp-requests"><div id="tdetReqsList"></div></div>
+      <div class="tdet-pane" id="tdp-info">
+        <div class="tdet-code-card">
+          <div class="tdet-code-lbl">Promokod</div>
+          <div class="tdet-code-val" id="tdetCodeFull">—</div>
+          <button class="tdet-code-copy" onclick="copyDetCode()">◎ Promokodni nusxalash</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px 20px">
+          <div class="m-stat-box"><div class="stat-box-l">A'zolar</div><div class="stat-box-v" id="tdetSM">0</div></div>
+          <div class="m-stat-box"><div class="stat-box-l">Avg ROI</div><div class="stat-box-v up" id="tdetSR">—%</div></div>
+          <div class="m-stat-box"><div class="stat-box-l">Win Rate</div><div class="stat-box-v gold" id="tdetSW">—%</div></div>
+          <div class="m-stat-box"><div class="stat-box-l">Yaratilgan</div><div class="stat-box-v" id="tdetSD">—</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- A'ZO PROFIL SHEET -->
+<div class="mem-ov" id="memOv" onclick="if(event.target===this)closeMem()">
+  <div class="mem-sheet">
+    <div class="modal-handle"></div>
+    <div class="mem-hero">
+      <div class="mem-av-lg" id="memAv">A</div>
+      <div>
+        <div class="mem-hero-nm" id="memNm">—</div>
+        <div class="mem-hero-sub" id="memSub">—</div>
+      </div>
+    </div>
+    <div class="lbl" style="margin-bottom:8px">Statistika</div>
+    <div class="mem-sg" id="memStats"></div>
+    <div class="lbl" style="margin-bottom:8px">Ulangan hisob</div>
+    <div id="memAccs" style="margin-bottom:14px"></div>
+    <button class="mem-kick-btn" id="memKickBtn" onclick="openKickPass()" style="display:none">
+      ⊗ Jamoadan chiqarib yuborish
+    </button>
+  </div>
+</div>
+
+<!-- PAROL TASDIQLASH (chiqarish) -->
+<div class="pass-ov" id="passOv" onclick="if(event.target===this)closePassOv()">
+  <div class="pass-sheet">
+    <div class="modal-handle"></div>
+    <div class="sm-title" style="margin-bottom:4px">Tasdiqlash</div>
+    <div class="sm-sub" id="passDesc">A'zoni chiqarish uchun parolni kiriting.</div>
+    <div class="sm-field" style="margin-bottom:12px">
+      <label>Parol</label>
+      <div style="position:relative">
+        <input type="password" id="passInp" placeholder="Platformaga kirish paroli">
+        <button onclick="document.getElementById('passInp').type=document.getElementById('passInp').type==='password'?'text':'password'" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.72rem;font-family:var(--mono)">ko'r</button>
+      </div>
+    </div>
+    <div class="sm-err" id="passErr" style="margin-bottom:12px"></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn-ghost" style="flex:1;padding:12px" onclick="closePassOv()">Bekor</button>
+      <button style="flex:1;padding:12px;background:rgba(255,77,109,0.1);border:1px solid rgba(255,77,109,0.25);border-radius:9px;font-family:var(--mono);font-size:0.72rem;color:var(--red);cursor:pointer" onclick="doKick()">Chiqarib yuborish</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOM KIRITISH MODALI -->
+<div class="sm-ov" id="createNameOv" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="sm-sheet">
+    <div class="modal-handle"></div>
+    <div class="sm-title">Jamoa nomi</div>
+    <div class="sm-sub">Jamoangizga nom bering. Yaratilgandan so'ng 15 belgili promokod beriladi.</div>
+    <div class="sm-field" style="margin-bottom:12px">
+      <label>Jamoa nomi</label>
+      <input type="text" id="createNameInp" placeholder="masalan: KH Trading Crew" maxlength="30">
+    </div>
+    <div class="sm-err" id="createNameErr" style="margin-bottom:12px"></div>
+    <button class="btn-g" style="width:100%" onclick="doCreateTeam()">Jamoa yaratish →</button>
+  </div>
+</div>
+
+<!-- KOD KIRITISH MODALI (qo'shilish 1-qadam) -->
+<div class="sm-ov" id="joinCodeOv" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="sm-sheet">
+    <div class="modal-handle"></div>
+    <div class="sm-title">Jamoaga qo'shilish</div>
+    <div class="sm-sub">Rahbardan olgan 15 belgili promokodni kiriting.</div>
+    <div class="sm-field" style="margin-bottom:12px">
+      <label>Promokod</label>
+      <input type="text" id="joinCodeInp" placeholder="a1B2c3D4e5F6g7H" maxlength="15"
+        style="letter-spacing:0.13em;text-align:center;font-size:0.92rem">
+    </div>
+    <div class="sm-err" id="joinCodeErr" style="margin-bottom:12px"></div>
+    <button class="btn-g" style="width:100%" onclick="doJoinStep1()">Davom etish →</button>
+  </div>
+</div>
+
+<!-- HISOB TANLASH MODALI (qo'shilish 2-qadam) -->
+<div class="sm-ov" id="joinAccOv" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="sm-sheet">
+    <div class="modal-handle"></div>
+    <div class="sm-title">Hisob tanlang</div>
+    <div class="sm-sub">Qaysi ulangan hisobingiz statistikasi jamoada ko'rinsin?</div>
+    <div id="joinAccList" style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px"></div>
+    <div class="sm-err" id="joinAccErr" style="margin-bottom:12px"></div>
+    <button class="btn-g" style="width:100%" onclick="doJoinStep2()">So'rov yuborish →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     JAMOAM — JAVASCRIPT
+═══════════════════════════════════════════════════════ -->
+<script>
+(function(){
+'use strict';
+
+// ── Yordamchi ──
+function H(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function toast(txt){
+  const e=document.createElement('div');
+  e.textContent=txt;
+  e.style.cssText='position:fixed;bottom:85px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--border2);color:var(--gold);padding:10px 18px;border-radius:10px;font-family:var(--mono);font-size:0.67rem;z-index:9999;white-space:nowrap;animation:fu .2s ease;pointer-events:none';
+  document.body.appendChild(e);
+  setTimeout(()=>e.remove(),2400);
+}
+function r(n){return Math.floor(Math.random()*n);}
+
+// 15 belgili promokod
+function genCode(){
+  const U='ABCDEFGHJKLMNPQRSTUVWXYZ',L='abcdefghjkmnpqrstuvwxyz',D='23456789',all=U+L+D;
+  let c=[U[r(U.length)],U[r(U.length)],U[r(U.length)],
+         L[r(L.length)],L[r(L.length)],L[r(L.length)],
+         D[r(D.length)],D[r(D.length)],D[r(D.length)]];
+  while(c.length<15)c.push(all[r(all.length)]);
+  for(let i=c.length-1;i>0;i--){const j=r(i+1);[c[i],c[j]]=[c[j],c[i]];}
+  return c.join('');
+}
+
+// ── Storage ──
+function load(){try{return JSON.parse(localStorage.getItem('kh_teams5')||'[]');}catch{return[];}}
+function save(){try{localStorage.setItem('kh_teams5',JSON.stringify(window._teams));}catch{}}
+window._teams=load();
+
+// ── Demo exchanges ──
+function getExchanges(){
+  return window._exchanges||[
+    {id:'ex1',name:'Binance', type:'Crypto',balance:4250,pnl:320, winRate:68,color:'#f0b90b'},
+    {id:'ex2',name:'Exness',  type:'Forex', balance:2100,pnl:180, winRate:62,color:'#0099e6'},
+    {id:'ex3',name:'Bybit',   type:'Crypto',balance:890, pnl:-45, winRate:55,color:'#e6b800'},
+  ];
+}
+function hexRgb(h){const m=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(h);return m?`${parseInt(m[1],16)},${parseInt(m[2],16)},${parseInt(m[3],16)}`:'128,128,128';}
+
+const avBg=['rgba(201,168,76,0.14)','rgba(0,212,170,0.12)','rgba(77,159,255,0.12)','rgba(245,200,66,0.11)','rgba(255,77,109,0.1)'];
+
+// ════════════════════════
+//  DASHBOARD BADGE
+// ════════════════════════
+function updateDashBadge(){
+  const total=window._teams.reduce((s,t)=>s+(t.role==='owner'?(t.requests||[]).length:0),0);
+  const b=document.getElementById('teamDashBadge');
+  if(b){b.textContent=total;b.style.display=total>0?'flex':'none';}
+}
+
+// ════════════════════════
+//  TEAMS HUB
+// ════════════════════════
+window.openTeamsHub=function(){
+  renderHubList();
+  setThubTab('list');
+  document.getElementById('teamsHub').classList.add('open');
+};
+
+window.closeTeamsHub=function(){
+  document.getElementById('teamsHub').classList.remove('open');
+};
+
+window.setThubTab=function(tab){
+  ['list','join'].forEach(t=>{
+    document.getElementById('tht-'+t)?.classList.toggle('active',t===tab);
+    document.getElementById('thp-'+t)?.classList.toggle('active',t===tab);
+  });
+  if(tab==='join'){ resetJoinTab(); renderPendingRequests(); }
+};
+
+function renderHubList(){
+  const el=document.getElementById('hubTeamsList');
+  if(!el)return;
+
+  // Faqat tasdiqlangan jamoalar (pending emas)
+  const activeTeams=window._teams.filter(t=>t.status!=='pending');
+
+  if(!activeTeams.length){
+    el.innerHTML=`
+      <div class="thub-choice" style="margin-top:4px">
+        <div style="padding:8px 0 16px;text-align:center">
+          <div style="font-family:var(--serif);font-size:1.05rem;font-weight:300;color:var(--white);margin-bottom:4px">Hali jamoangiz yo'q</div>
+          <div style="font-size:0.67rem;color:var(--muted2);line-height:1.5">Yangi jamoa yarating yoki<br>promokod orqali qo'shiling</div>
+        </div>
+        <div class="thub-choice-card" onclick="openCreateFlow()">
+          <div class="thub-choice-ico" style="background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2)">⬡</div>
+          <div class="thub-choice-info">
+            <div class="thub-choice-nm">Jamoa yaratish</div>
+            <div class="thub-choice-sub">O'z jamoangizni yarating va promokod orqali a'zo to'plang</div>
+          </div>
+          <span class="thub-choice-arr">›</span>
+        </div>
+        <div class="thub-choice-card" onclick="setThubTab('join')">
+          <div class="thub-choice-ico" style="background:rgba(77,159,255,0.1);border:1px solid rgba(77,159,255,0.2)">◎</div>
+          <div class="thub-choice-info">
+            <div class="thub-choice-nm">Jamoaga qo'shilish</div>
+            <div class="thub-choice-sub">Rahbardan promokod olib mavjud jamoaga qo'shiling</div>
+          </div>
+          <span class="thub-choice-arr">›</span>
+        </div>
+      </div>`;
+    return;
+  }
+
+  // Faqat tasdiqlangan jamoalar kartalar
+  let html='';
+  activeTeams.forEach(t=>{
+    const mc=(t.members||[]).length, rc=(t.requests||[]).length;
+    html+=`
+    <div class="tj-card" onclick="openTeamDet('${t.id}')">
+      <div class="tj-card-top">
+        <div class="tj-ico">⬡</div>
+        <div class="tj-info">
+          <div class="tj-nm">${H(t.name)}</div>
+          <div class="tj-meta">
+            <span>${mc} a'zo</span>
+            ${rc>0&&t.role==='owner'?`<span style="color:var(--red)">· ${rc} so'rov</span>`:''}
+          </div>
+        </div>
+        <span class="tj-role ${t.role}">${t.role==='owner'?'Rahbar':"A'zo"}</span>
+        <span class="tj-arr">›</span>
+      </div>
+      <div class="tj-stats">
+        <div class="tjs"><div class="tjs-v">${mc}</div><div class="tjs-l">A'zo</div></div>
+        <div class="tjs"><div class="tjs-v up">${t.avgRoi??'—'}%</div><div class="tjs-l">ROI</div></div>
+        <div class="tjs"><div class="tjs-v gold">${t.winRate??'—'}%</div><div class="tjs-l">Win</div></div>
+      </div>
+    </div>`;
+  });
+
+  el.innerHTML=html;
+}
+
+// Qo'shilish tabidagi pending so'rovlar
+function renderPendingRequests(){
+  const pendingTeams=window._teams.filter(t=>t.status==='pending');
+  const sec=document.getElementById('pendingRequestsSection');
+  const lst=document.getElementById('pendingRequestsList');
+  if(!sec||!lst)return;
+  if(!pendingTeams.length){
+    sec.style.display='none';
+    return;
+  }
+  sec.style.display='block';
+  lst.innerHTML=pendingTeams.map(t=>{
+    const d=new Date(t.joinedAt||Date.now());
+    const dateStr=d.getDate()+'.'+(d.getMonth()+1)+'.'+d.getFullYear();
+    return `
+    <div style="background:rgba(245,200,66,0.05);border:1px solid rgba(245,200,66,0.18);border-radius:12px;padding:13px 15px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 1.6s infinite;flex-shrink:0;margin-top:4px"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.8rem;color:var(--white);margin-bottom:3px">${H(t.name)}</div>
+        <div style="font-size:0.62rem;color:var(--amber);margin-bottom:2px">Rahbar ko'rib chiqmoqda…</div>
+        <div style="font-size:0.58rem;color:var(--muted)">So'rov yuborildi: ${dateStr}</div>
+      </div>
+      <button onclick="cancelPendingReq('${t.id}')" style="background:none;border:1px solid rgba(255,77,109,0.2);border-radius:7px;padding:4px 9px;font-family:var(--mono);font-size:0.58rem;color:var(--red);cursor:pointer;flex-shrink:0">Bekor</button>
+    </div>`;
+  }).join('');
+}
+
+window.cancelPendingReq=function(id){
+  window._teams=window._teams.filter(t=>t.id!==id);
+  save();
+  renderPendingRequests();
+  updateDashBadge();
+};
+
+function renderHubReqs(){
+  const el=document.getElementById('hubReqsList');
+  if(!el)return;
+  const ownerTeams=window._teams.filter(t=>t.role==='owner'&&(t.requests||[]).length>0);
+  const badge=document.getElementById('thubReqBadge');
+  const total=ownerTeams.reduce((s,t)=>s+(t.requests||[]).length,0);
+  if(badge){badge.textContent=total;badge.style.display=total>0?'flex':'none';}
+  if(!ownerTeams.length){
+    el.innerHTML=`<div style="padding:32px 18px;text-align:center;font-size:0.7rem;color:var(--muted)">Hozircha so'rov yo'q</div>`;
+    return;
+  }
+  el.innerHTML=ownerTeams.map(t=>`
+    <div style="padding:10px 18px 2px">
+      <div class="lbl">${H(t.name)}</div>
+    </div>
+    ${(t.requests||[]).map(rq=>`
+    <div class="req-row" id="hrq_${rq.id}">
+      <div class="tm-av" style="background:rgba(77,159,255,0.12);flex-shrink:0">${H(rq.name).charAt(0).toUpperCase()}</div>
+      <div class="req-info">
+        <div class="req-nm">${H(rq.name)}</div>
+        <div class="req-sub">${H(rq.handle||'')}${rq.accountName?' · '+H(rq.accountName):''} · ${rq.timeAgo||'hozir'}</div>
+      </div>
+      <div class="req-btns">
+        <button class="req-acc" onclick="acceptReq('${t.id}','${rq.id}')">✓</button>
+        <button class="req-rej" onclick="rejectReq('${t.id}','${rq.id}')">✕</button>
+      </div>
+    </div>`).join('')}`).join('');
+}
+
+// ════════════════════════
+//  JAMOA YARATISH
+// ════════════════════════
+window.openCreateFlow=function(){
+  document.getElementById('createNameInp').value='';
+  document.getElementById('createNameErr').style.display='none';
+  document.getElementById('createNameOv').classList.add('open');
+  setTimeout(()=>document.getElementById('createNameInp').focus(),300);
+};
+
+window.doCreateTeam=function(){
+  const name=document.getElementById('createNameInp').value.trim();
+  const err=document.getElementById('createNameErr');
+  if(!name){err.textContent='Jamoa nomini kiriting';err.style.display='block';return;}
+  err.style.display='none';
+  const me=window._userData?.name||document.getElementById('mProfName')?.textContent||'Men';
+  const t={
+    id:Date.now().toString(),name,code:genCode(),role:'owner',
+    members:[{id:'me',name:me,handle:'@'+me.toLowerCase().replace(/\s+/g,''),roi:0,winRate:0,trades:0,isOwner:true,accounts:getExchanges().slice(0,1)}],
+    requests:[],avgRoi:0,winRate:0,createdAt:Date.now()
+  };
+  window._teams.unshift(t);
+  save();
+  document.getElementById('createNameOv').classList.remove('open');
+  updateDashBadge();
+  renderHubList();
+  setTimeout(()=>openTeamDet(t.id),220);
+};
+
+// ════════════════════════
+//  QO'SHILISH (tab inline)
+// ════════════════════════
+let _jCode='',_jSelAcc=null;
+
+// Tabni reset qilish (qadam 1 ga qaytish)
+window.resetJoinTab=function(){
+  _jCode='';_jSelAcc=null;
+  const inp=document.getElementById('joinTabCode');
+  if(inp)inp.value='';
+  const e1=document.getElementById('joinTabCodeErr');
+  if(e1)e1.style.display='none';
+  document.getElementById('joinStep1Div').style.display='block';
+  document.getElementById('joinStep2Div').style.display='none';
+};
+
+// Qadam 1: kodni tekshirish
+window.doJoinTabStep1=function(){
+  const code=document.getElementById('joinTabCode').value.trim();
+  const err=document.getElementById('joinTabCodeErr');
+  if(code.length<10){err.textContent="To'liq 15 belgili promokodni kiriting";err.style.display='block';return;}
+  if(window._teams.find(t=>t.code===code&&t.status!=='pending')){err.textContent="Siz allaqachon bu jamoadasiz";err.style.display='block';return;}
+  err.style.display='none';
+  _jCode=code;_jSelAcc=null;
+  // Hisob ro'yxatini render
+  const exs=getExchanges();
+  const el=document.getElementById('joinTabAccList');
+  if(!exs.length){
+    el.innerHTML=`<div style="padding:18px;text-align:center;font-size:0.68rem;color:var(--muted)">Hali hech qanday hisob ulanmagan.<br>Avval Exchange bo'limida hisob ulang.</div>`;
+  } else {
+    el.innerHTML=exs.map((ex,i)=>`
+      <div class="acc-item" id="jtai_${i}" onclick="selJoinTabAcc(${i})">
+        <div class="acc-ico" style="background:rgba(${hexRgb(ex.color||'#888')},0.15);color:${ex.color||'#888'}">${H(ex.name).slice(0,2).toUpperCase()}</div>
+        <div class="acc-info">
+          <div class="acc-nm">${H(ex.name)}</div>
+          <div class="acc-sub">${H(ex.type||'Hisob')} · $${(ex.balance||0).toLocaleString()}</div>
+        </div>
+        <div class="acc-chk" id="jtac_${i}"></div>
+      </div>`).join('');
+  }
+  document.getElementById('joinStep1Div').style.display='none';
+  document.getElementById('joinStep2Div').style.display='block';
+  document.getElementById('joinTabAccErr').style.display='none';
+};
+
+window.selJoinTabAcc=function(i){
+  _jSelAcc=i;
+  document.querySelectorAll('#joinTabAccList .acc-item').forEach((el,j)=>{
+    el.classList.toggle('chosen',j===i);
+    const c=document.getElementById('jtac_'+j);
+    if(c){c.classList.toggle('on',j===i);c.textContent=j===i?'✓':'';}
+  });
+};
+
+// Qadam 2: so'rov yuborish
+window.doJoinTabStep2=function(){
+  const err=document.getElementById('joinTabAccErr');
+  if(_jSelAcc===null){err.textContent="Hisob tanlang";err.style.display='block';return;}
+  err.style.display='none';
+  const ex=getExchanges()[_jSelAcc];
+  const me=window._userData?.name||document.getElementById('mProfName')?.textContent||'Foydalanuvchi';
+  const t={
+    id:'p'+Date.now(),name:'Jamoa ('+_jCode.slice(0,5)+'…)',
+    code:_jCode,role:'member',status:'pending',
+    members:[],requests:[],avgRoi:0,winRate:0,
+    myAccount:ex,joinedAt:Date.now()
+  };
+  window._teams.push(t);
+  save();
+  updateDashBadge();
+  // Listga o'tish va reset
+  setThubTab('list');
+  renderHubList();
+  // Qo'shilish tabiga qaytganda pending ko'rinadi
+  renderPendingRequests();
+  toast('📨 So\'rov yuborildi · Rahbar qabul qilgunicha kuting');
+};
+
+// Eski modal-based join (hali ishlatiladi "choice" kartadan)
+window.openJoinFlow=function(){
+  // Endi to'g'ridan "Qo'shilish" tabiga o'tamiz
+  setThubTab('join');
+};
+
+window.doJoinStep1=function(){
+  const code=document.getElementById('joinCodeInp').value.trim();
+  const err=document.getElementById('joinCodeErr');
+  if(code.length<10){err.textContent="To'liq 15 belgili promokodni kiriting";err.style.display='block';return;}
+  if(window._teams.find(t=>t.code===code&&t.status!=='pending')){err.textContent="Siz allaqachon bu jamoadasiz";err.style.display='block';return;}
+  err.style.display='none';
+  _jCode=code;_jSelAcc=null;
+  // Hisob tanlash
+  const exs=getExchanges();
+  const el=document.getElementById('joinAccList');
+  if(!exs.length){
+    el.innerHTML=`<div style="padding:18px;text-align:center;font-size:0.68rem;color:var(--muted)">Hali hech qanday hisob ulanmagan.<br>Avval Exchange bo'limida hisob ulang.</div>`;
+  } else {
+    el.innerHTML=exs.map((ex,i)=>`
+      <div class="acc-item" id="jai_${i}" onclick="selJoinAcc(${i})">
+        <div class="acc-ico" style="background:rgba(${hexRgb(ex.color||'#888')},0.15);color:${ex.color||'#888'}">${H(ex.name).slice(0,2).toUpperCase()}</div>
+        <div class="acc-info">
+          <div class="acc-nm">${H(ex.name)}</div>
+          <div class="acc-sub">${H(ex.type||'Hisob')} · $${(ex.balance||0).toLocaleString()}</div>
+        </div>
+        <div class="acc-chk" id="jac_${i}"></div>
+      </div>`).join('');
+  }
+  document.getElementById('joinCodeOv').classList.remove('open');
+  document.getElementById('joinAccErr').style.display='none';
+  document.getElementById('joinAccOv').classList.add('open');
+};
+
+window.selJoinAcc=function(i){
+  _jSelAcc=i;
+  document.querySelectorAll('.acc-item').forEach((el,j)=>{
+    el.classList.toggle('chosen',j===i);
+    const c=document.getElementById('jac_'+j);
+    if(c){c.classList.toggle('on',j===i);c.textContent=j===i?'✓':'';}
+  });
+};
+
+window.doJoinStep2=function(){
+  const err=document.getElementById('joinAccErr');
+  if(_jSelAcc===null){err.textContent="Hisob tanlang";err.style.display='block';return;}
+  err.style.display='none';
+  const ex=getExchanges()[_jSelAcc];
+  const me=window._userData?.name||document.getElementById('mProfName')?.textContent||'Foydalanuvchi';
+  const t={
+    id:'p'+Date.now(),name:'Jamoa ('+_jCode.slice(0,5)+'…)',
+    code:_jCode,role:'member',status:'pending',
+    members:[],requests:[],avgRoi:0,winRate:0,
+    myAccount:ex,joinedAt:Date.now()
+  };
+  window._teams.push(t);
+  save();
+  document.getElementById('joinAccOv').classList.remove('open');
+  updateDashBadge();
+  renderHubList();
+  toast('📨 So\'rov yuborildi · Rahbar qabul qilgunicha kuting');
+};
+
+// ════════════════════════
+//  JAMOA DETAIL
+// ════════════════════════
+let _tid=null,_mid=null;
+
+window.openTeamDet=function(id){
+  const t=window._teams.find(x=>x.id===id);
+  if(!t)return;
+  _tid=id;
+  document.getElementById('tdetTitle').textContent=t.name;
+  document.getElementById('tdetCodeBtn').textContent=t.code?(t.code.slice(0,7)+'…'):'—';
+  document.getElementById('tdetCodeFull').textContent=t.code||'—';
+  // So'rovlar tab
+  const rTab=document.getElementById('tdt-requests');
+  rTab.style.display=t.role==='owner'?'':'none';
+  setTdetTab('members');
+  renderDetMembers(t);
+  renderDetReqs(t);
+  renderDetInfo(t);
+  document.getElementById('teamDet').classList.add('open');
+};
+
+window.closeTeamDet=function(){
+  document.getElementById('teamDet').classList.remove('open');
+  _tid=null;
+  renderHubList();
+  renderHubReqs();
+  updateDashBadge();
+};
+
+window.setTdetTab=function(tab){
+  ['members','requests','info'].forEach(t=>{
+    document.getElementById('tdt-'+t)?.classList.toggle('active',t===tab);
+    document.getElementById('tdp-'+t)?.classList.toggle('active',t===tab);
+  });
+};
+
+window.copyDetCode=function(){
+  const t=window._teams.find(x=>x.id===_tid);
+  if(!t?.code)return;
+  navigator.clipboard?.writeText(t.code).then(()=>toast('◎ Nusxalandi: '+t.code));
+};
+
+function renderDetMembers(t){
+  const el=document.getElementById('tdetMembersList');
+  if(!el)return;
+  const ms=t.members||[];
+  if(!ms.length){el.innerHTML=`<div style="padding:32px 16px;text-align:center;font-size:0.7rem;color:var(--muted)">Hali a'zo yo'q</div>`;return;}
+  el.innerHTML=ms.map((m,i)=>`
+    <div class="tm-row" onclick="openMemProfile('${t.id}',${i})">
+      <div class="tm-av" style="background:${avBg[i%avBg.length]}">${H(m.name).charAt(0).toUpperCase()}</div>
+      <div class="tm-info">
+        <div class="tm-nm">${H(m.name)}${m.isOwner?'<span class="tm-owner-tag">Rahbar</span>':''}</div>
+        <div class="tm-sub">${H(m.handle||'')}${m.accounts?.length?' · '+H(m.accounts[0].name):''}</div>
+      </div>
+      <div class="tm-roi ${(m.roi||0)>=0?'up':'dn'}">${(m.roi||0)>=0?'+':''}${m.roi||0}%</div>
+    </div>`).join('');
+}
+
+function renderDetReqs(t){
+  const el=document.getElementById('tdetReqsList');
+  if(!el)return;
+  const rs=t.requests||[];
+  const b=document.getElementById('tdetReqBadge');
+  if(b){b.textContent=rs.length;b.style.display=rs.length>0?'flex':'none';}
+  if(!rs.length){el.innerHTML=`<div style="padding:32px 16px;text-align:center;font-size:0.7rem;color:var(--muted)">Hozircha so'rov yo'q</div>`;return;}
+  el.innerHTML=rs.map(rq=>`
+    <div class="req-row" id="drq_${rq.id}">
+      <div class="tm-av" style="background:rgba(77,159,255,0.12);flex-shrink:0">${H(rq.name).charAt(0).toUpperCase()}</div>
+      <div class="req-info">
+        <div class="req-nm">${H(rq.name)}</div>
+        <div class="req-sub">${H(rq.handle||'')}${rq.accountName?' · '+H(rq.accountName):''} · ${rq.timeAgo||'hozir'}</div>
+      </div>
+      <div class="req-btns">
+        <button class="req-acc" onclick="acceptReq('${t.id}','${rq.id}')">✓ Qabul</button>
+        <button class="req-rej" onclick="rejectReq('${t.id}','${rq.id}')">✕ Rad</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderDetInfo(t){
+  const ms=t.members||[];
+  const s=document.getElementById('tdetSM');if(s)s.textContent=ms.length;
+  const sr=document.getElementById('tdetSR');if(sr)sr.textContent=(t.avgRoi??'—')+'%';
+  const sw=document.getElementById('tdetSW');if(sw)sw.textContent=(t.winRate??'—')+'%';
+  const sd=document.getElementById('tdetSD');
+  if(sd&&t.createdAt){const d=new Date(t.createdAt);sd.textContent=d.getDate()+'.'+(d.getMonth()+1)+'.'+d.getFullYear();}
+}
+
+// ════════════════════════
+//  SO'ROVLAR
+// ════════════════════════
+window.acceptReq=function(tid,rid){
+  const t=window._teams.find(x=>x.id===tid);if(!t)return;
+  const i=(t.requests||[]).findIndex(r=>r.id===rid);if(i===-1)return;
+  const rq=t.requests.splice(i,1)[0];
+  if(!t.members)t.members=[];
+  t.members.push({id:'m'+Date.now(),name:rq.name,handle:rq.handle,roi:0,winRate:0,trades:0,isOwner:false,accounts:rq.accounts||[]});
+  save();
+  if(_tid===tid){renderDetMembers(t);renderDetReqs(t);renderDetInfo(t);}
+  renderHubReqs();updateDashBadge();
+  toast('✓ '+rq.name+' qabul qilindi');
+};
+
+window.rejectReq=function(tid,rid){
+  const t=window._teams.find(x=>x.id===tid);if(!t)return;
+  const i=(t.requests||[]).findIndex(r=>r.id===rid);if(i===-1)return;
+  const name=t.requests[i].name;
+  t.requests.splice(i,1);
+  save();
+  if(_tid===tid)renderDetReqs(t);
+  renderHubReqs();updateDashBadge();
+  toast('✕ '+name+' rad etildi');
+};
+
+// ════════════════════════
+//  A'ZO PROFILI
+// ════════════════════════
+window.openMemProfile=function(tid,idx){
+  const t=window._teams.find(x=>x.id===tid);if(!t)return;
+  const m=t.members[idx];if(!m)return;
+  _tid=tid;_mid=idx;
+  const av=document.getElementById('memAv');
+  av.textContent=H(m.name).charAt(0).toUpperCase();
+  av.style.background=avBg[idx%avBg.length];
+  document.getElementById('memNm').innerHTML=H(m.name)+(m.isOwner?' <span class="tm-owner-tag" style="font-size:0.58rem">Rahbar</span>':'');
+  document.getElementById('memSub').textContent=(m.handle||'')+(m.accounts?.length?' · '+m.accounts[0].name:'');
+  document.getElementById('memStats').innerHTML=`
+    <div class="mem-sc"><div class="mem-sc-v ${(m.roi||0)>=0?'up':'dn'}">${(m.roi||0)>=0?'+':''}${m.roi||0}%</div><div class="mem-sc-l">Bu Oy ROI</div></div>
+    <div class="mem-sc"><div class="mem-sc-v gold">${m.winRate||'—'}%</div><div class="mem-sc-l">Win Rate</div></div>
+    <div class="mem-sc"><div class="mem-sc-v" style="color:var(--blue)">${m.trades||'—'}</div><div class="mem-sc-l">Savdolar</div></div>
+    <div class="mem-sc"><div class="mem-sc-v">${(m.accounts||[]).length}</div><div class="mem-sc-l">Hisob</div></div>`;
+  const accs=m.accounts||[];
+  document.getElementById('memAccs').innerHTML=accs.length
+    ?accs.map(a=>`
+      <div class="mem-acc-row">
+        <div class="mem-acc-ico" style="background:rgba(${hexRgb(a.color||'#888')},0.15);color:${a.color||'#888'}">${H(a.name||'?').slice(0,2).toUpperCase()}</div>
+        <div style="flex:1"><div class="mem-acc-nm">${H(a.name||'Hisob')}</div><div class="mem-acc-sub">${H(a.type||'')} · $${(a.balance||0).toLocaleString()}</div></div>
+        <div class="tm-roi ${(a.pnl||0)>=0?'up':'dn'}" style="font-size:0.72rem">${(a.pnl||0)>=0?'+':''}$${Math.abs(a.pnl||0)}</div>
+      </div>`).join('')
+    :`<div style="padding:10px 0;font-size:0.67rem;color:var(--muted);text-align:center">Hisob ma'lumoti yo'q</div>`;
+  const kb=document.getElementById('memKickBtn');
+  kb.style.display=(t.role==='owner'&&!m.isOwner)?'block':'none';
+  document.getElementById('memOv').classList.add('open');
+};
+window.closeMem=function(){document.getElementById('memOv').classList.remove('open');};
+
+// ════════════════════════
+//  CHIQARISH
+// ════════════════════════
+window.openKickPass=function(){
+  const t=window._teams.find(x=>x.id===_tid);
+  const m=t?.members[_mid];
+  if(m)document.getElementById('passDesc').textContent=`"${m.name}" ni jamoadan chiqarish uchun parolni tasdiqlang.`;
+  document.getElementById('passInp').value='';
+  document.getElementById('passErr').style.display='none';
+  document.getElementById('passOv').classList.add('open');
+};
+window.closePassOv=function(){document.getElementById('passOv').classList.remove('open');};
+
+window.doKick=function(){
+  const pass=document.getElementById('passInp').value;
+  const err=document.getElementById('passErr');
+  if(!pass){err.textContent='Parol kiritilmadi';err.style.display='block';return;}
+  // Demo parol "1234" — Firebase auth.reauthenticate bilan almashtiriladi
+  if(pass!==(window._userPassword||'1234')){err.textContent="Parol noto'g'ri";err.style.display='block';return;}
+  err.style.display='none';
+  const t=window._teams.find(x=>x.id===_tid);if(!t)return;
+  const m=t.members[_mid];if(!m)return;
+  const name=m.name;
+  t.members.splice(_mid,1);
+  save();
+  closePassOv();
+  closeMem();
+  renderDetMembers(t);renderDetInfo(t);
+  toast('⊗ '+name+' jamoadan chiqarildi');
+};
+
+// ════════════════════════
+//  TEST YORDAMCHI
+// ════════════════════════
+window._testReq=function(tid){
+  const t=window._teams.find(x=>x.id===tid);
+  if(!t||t.role!=='owner')return;
+  if(!t.requests)t.requests=[];
+  const names=['Sardor T.','Dilnoza Y.','Akbar R.','Murod X.','Zulfiya O.'];
+  const nm=names[r(names.length)];
+  const ex=getExchanges()[r(getExchanges().length)];
+  t.requests.push({id:Date.now().toString(),name:nm,handle:'@'+nm.split(' ')[0].toLowerCase(),
+    accountName:ex.name,accounts:[ex],timeAgo:'hozirgina'});
+  save();
+  if(_tid===tid){const ft=window._teams.find(x=>x.id===tid);renderDetReqs(ft);}
+  renderHubList();renderHubReqs();updateDashBadge();
+  toast('🔔 Yangi so\'rov: '+nm);
+};
+
+// Init
+document.addEventListener('DOMContentLoaded',updateDashBadge);
+})();
+</script>
+
+<!-- ═══════════════════════════════════════
+     POZITSIYALAR PANELI
+═══════════════════════════════════════ -->
+<style>
+/* ── Asosiy panel ── */
+.pos-panel        { position:fixed; inset:0; background:var(--bg); z-index:640; display:none; flex-direction:column; }
+.pos-panel.open   { display:flex; animation:fu .22s ease both; }
+.pos-panel-hdr    { display:flex; align-items:center; gap:10px; padding:calc(14px + env(safe-area-inset-top)) 18px 0; flex-shrink:0; }
+.pos-panel-back   { background:none; border:none; color:var(--muted2); font-size:1.1rem; cursor:pointer; padding:2px 10px 2px 0; }
+.pos-panel-title  { font-family:var(--serif); font-size:1.2rem; font-weight:300; color:var(--white); flex:1; }
+.pos-panel-sub    { font-size:0.6rem; color:var(--muted2); margin-top:2px; }
+.pos-panel-body   { flex:1; overflow-y:auto; padding:14px 0 40px; }
+.pos-panel-body::-webkit-scrollbar { display:none; }
+
+/* ── Ro'yxat satri (bosiladigan) ── */
+.pos-row          { display:flex; align-items:center; gap:10px; padding:12px 16px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .12s; }
+.pos-row:active   { background:var(--bg3); }
+.pos-row:last-child { border-bottom:none; }
+.pos-row-left     { flex:1; min-width:0; }
+.pos-row-pair     { font-size:0.82rem; color:var(--white); display:flex; align-items:center; gap:6px; }
+.pos-row-meta     { font-size:0.58rem; color:var(--muted2); margin-top:3px; }
+.pos-row-right    { text-align:right; flex-shrink:0; }
+.pos-row-pnl      { font-family:var(--mono); font-size:0.82rem; font-weight:500; }
+.pos-row-sub      { font-size:0.58rem; color:var(--muted2); margin-top:3px; }
+.pos-dir          { font-size:0.52rem; padding:1px 6px; border-radius:3px; font-weight:600; letter-spacing:0.06em; flex-shrink:0; }
+.pos-dir.long     { background:rgba(0,212,170,0.1); color:var(--green); border:1px solid rgba(0,212,170,0.2); }
+.pos-dir.short    { background:rgba(255,77,109,0.1); color:var(--red);   border:1px solid rgba(255,77,109,0.2); }
+.pos-exc-tag      { font-size:0.5rem; padding:1px 5px; border-radius:3px; background:var(--bg3); border:1px solid var(--border2); color:var(--muted2); }
+
+/* ── Vaqt separator ── */
+.time-sep         { padding:6px 16px; font-size:0.55rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); background:var(--bg3); border-bottom:1px solid var(--border); }
+
+/* ── Summary strip ── */
+.pos-summary      { margin:12px 16px 4px; padding:12px 14px; background:var(--bg2); border:1px solid var(--border); border-radius:12px; }
+.pos-sum-row      { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.pos-sum-meta     { display:flex; gap:14px; flex-wrap:wrap; }
+
+/* ── Empty state ── */
+.pos-empty        { padding:48px 20px; text-align:center; }
+.pos-empty-ico    { font-size:2rem; margin-bottom:12px; opacity:.3; }
+.pos-empty-txt    { font-family:var(--serif); font-size:1rem; font-weight:300; color:var(--white); margin-bottom:5px; }
+.pos-empty-sub    { font-size:0.67rem; color:var(--muted2); line-height:1.5; }
+
+/* ── Detail sheet (pastdan chiqadi) ── */
+.pos-det-ov       { position:fixed; inset:0; background:rgba(0,0,0,0.82); backdrop-filter:blur(10px); z-index:660; display:none; align-items:flex-end; justify-content:center; }
+.pos-det-ov.open  { display:flex; }
+.pos-det-sheet    { width:100%; max-width:520px; background:var(--bg2); border-radius:28px 28px 0 0; border-top:1px solid var(--border2); padding:16px 20px calc(32px + env(safe-area-inset-bottom)); max-height:92vh; overflow-y:auto; animation:slideUp .28s ease; }
+.pos-det-sheet::-webkit-scrollbar { display:none; }
+
+/* Detail header */
+.pdet-hdr         { display:flex; align-items:flex-start; gap:12px; margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid var(--border); }
+.pdet-pair        { font-family:var(--serif); font-size:1.5rem; font-weight:300; color:var(--white); line-height:1; }
+.pdet-type        { font-size:0.58rem; color:var(--muted2); margin-top:5px; }
+.pdet-pnl-box     { margin-left:auto; text-align:right; }
+.pdet-pnl         { font-family:var(--mono); font-size:1.3rem; font-weight:500; }
+.pdet-pnl-lbl     { font-size:0.55rem; color:var(--muted); letter-spacing:0.12em; text-transform:uppercase; margin-top:3px; }
+
+/* Detail qatorlar */
+.pdet-section     { margin-bottom:14px; }
+.pdet-sec-title   { font-size:0.55rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+.pdet-grid        { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.pdet-grid-3      { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
+.pdet-cell        { background:var(--bg3); border:1px solid var(--border); border-radius:9px; padding:10px 12px; }
+.pdet-cell-l      { font-size:0.52rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px; }
+.pdet-cell-v      { font-family:var(--mono); font-size:0.82rem; color:var(--white); }
+.pdet-cell-v.up   { color:var(--green); }
+.pdet-cell-v.dn   { color:var(--red); }
+.pdet-cell-v.gold { color:var(--gold); }
+.pdet-cell-v.blue { color:var(--blue); }
+
+/* TP/SL progress bar */
+.pdet-tpsl        { background:var(--bg3); border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin-bottom:6px; }
+.pdet-tpsl-row    { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.pdet-tpsl-lbl    { font-size:0.58rem; color:var(--muted2); }
+.pdet-tpsl-val    { font-family:var(--mono); font-size:0.8rem; }
+.pdet-bar-track   { height:4px; background:var(--bg4,#111); border-radius:2px; overflow:hidden; position:relative; }
+.pdet-bar-fill    { height:100%; border-radius:2px; transition:width .4s ease; }
+.pdet-bar-cur     { position:absolute; top:-3px; width:2px; height:10px; background:var(--white); border-radius:1px; transform:translateX(-50%); }
+
+/* Exchange badge */
+.pdet-exc-badge   { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:6px; font-size:0.62rem; font-family:var(--mono); }
+</style>
+
+<div class="pos-panel" id="posPanel">
+  <div class="pos-panel-hdr">
+    <button class="pos-panel-back" onclick="closePosPanel()">←</button>
+    <div>
+      <div class="pos-panel-title" id="posPanelTitle">Pozitsiyalar</div>
+      <div class="pos-panel-sub" id="posPanelSub">—</div>
+    </div>
+  </div>
+  <div id="posPanelSummary" class="pos-summary" style="display:none">
+    <div class="pos-sum-row">
+      <div style="font-size:0.58rem;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase">Jami PnL</div>
+      <div style="font-family:var(--mono);font-size:1rem;font-weight:500" id="posPanelTotal">—</div>
+    </div>
+    <div class="pos-sum-meta" id="posPanelMeta"></div>
+  </div>
+  <div class="pos-panel-body" id="posPanelBody">
+    <div class="pos-empty"><div class="pos-empty-ico">◈</div><div class="pos-empty-txt">Yuklanmoqda…</div></div>
+  </div>
+</div>
+
+<!-- POZITSIYA DETAIL SHEET -->
+<div class="pos-det-ov" id="posDetOv" onclick="if(event.target===this)closePosDetail()">
+  <div class="pos-det-sheet" id="posDetSheet">
+    <div class="modal-handle"></div>
+    <div id="posDetContent"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+//  POZITSIYALAR — TO'LIQ LOGIKA
+// ════════════════════════════════════════
+
+// ── Demo data (Firebase/exchange integratsiyasida almashtiriladi) ──
+function getPositionsData(type){
+  const now=Date.now(), h=3600000, d=86400000;
+
+  // Ochiq pozitsiyalar — Forex (MyFXBook), Crypto (Binance/Bitget) ma'lumot formati
+  const open=[
+    {
+      id:'p1', pair:'XAUUSD', dir:'long', lots:0.5, exchange:'Exness', source:'myfxbook',
+      openPrice:2318.40, curPrice:2326.15, pnl:+38.75, pnlPct:+1.67,
+      openTime:now-2.5*h, swap:-0.12, commission:-0.50,
+      tp:2340.00, sl:2300.00,
+      margin:116.00, leverage:'1:500',
+      comment:'ICT OB'
+    },
+    {
+      id:'p2', pair:'USTEC', dir:'long', lots:0.1, exchange:'Exness', source:'myfxbook',
+      openPrice:18420, curPrice:18380, pnl:-40.00, pnlPct:-2.17,
+      openTime:now-5*h, swap:-1.20, commission:-0.80,
+      tp:18600, sl:18200,
+      margin:184.00, leverage:'1:100',
+      comment:''
+    },
+    {
+      id:'p3', pair:'EURUSD', dir:'short', lots:1.0, exchange:'Exness', source:'myfxbook',
+      openPrice:1.08420, curPrice:1.08280, pnl:+14.00, pnlPct:+0.13,
+      openTime:now-0.8*h, swap:0, commission:-0.70,
+      tp:1.07800, sl:1.09000,
+      margin:216.84, leverage:'1:500',
+      comment:'London session'
+    },
+    {
+      id:'p4', pair:'BTCUSDT', dir:'long', lots:0.02, exchange:'Binance', source:'binance',
+      openPrice:65400, curPrice:66200, pnl:+16.00, pnlPct:+1.22,
+      openTime:now-8*h, swap:0, commission:-0.13,
+      tp:68000, sl:63000,
+      margin:130.80, leverage:'10x',
+      unrealizedPnl:+16.00, fundingRate:0.01,
+      comment:''
+    },
+    {
+      id:'p5', pair:'ETHUSDT', dir:'short', lots:0.1, exchange:'Bitget', source:'bitget',
+      openPrice:3480, curPrice:3510, pnl:-30.00, pnlPct:-0.86,
+      openTime:now-3*h, swap:0, commission:-0.10,
+      tp:3200, sl:3600,
+      margin:34.80, leverage:'20x',
+      unrealizedPnl:-30.00, fundingRate:-0.005,
+      comment:''
+    },
+  ];
+
+  const today=[
+    {id:'h1',pair:'XAUUSD',dir:'long', lots:0.3,exchange:'Exness',source:'myfxbook',openPrice:2305.10,closePrice:2318.40,pnl:+39.90,pnlPct:+1.58,openTime:now-6*h,closeTime:now-4*h,  duration:2*h,  swap:-0.08,commission:-0.40,tp:2320,sl:2295,comment:'NY session'},
+    {id:'h2',pair:'GBPUSD', dir:'short',lots:0.5,exchange:'Exness',source:'myfxbook',openPrice:1.26800,closePrice:1.26500,pnl:+15.00,pnlPct:+0.24,openTime:now-5*h,closeTime:now-3*h,  duration:2*h,  swap:0,   commission:-0.60,tp:1.262,sl:1.274,comment:''},
+    {id:'h3',pair:'EURUSD', dir:'long', lots:1.0,exchange:'Exness',source:'myfxbook',openPrice:1.08100,closePrice:1.07900,pnl:-20.00,pnlPct:-0.18,openTime:now-8*h,closeTime:now-6.5*h,duration:1.5*h,swap:0,   commission:-0.70,tp:1.090,sl:1.078,comment:'Stop out'},
+    {id:'h4',pair:'BTCUSDT',dir:'long', lots:0.05,exchange:'Binance',source:'binance',openPrice:64800,  closePrice:65400,  pnl:+30.00,pnlPct:+0.93,openTime:now-10*h,closeTime:now-7*h, duration:3*h,  swap:0,   commission:-0.19,tp:66000,sl:63500,comment:''},
+    {id:'h5',pair:'SOLUSDT',dir:'short',lots:1.0, exchange:'Bitget', source:'bitget', openPrice:182.50, closePrice:178.20, pnl:+43.00,pnlPct:+2.36,openTime:now-12*h,closeTime:now-9*h, duration:3*h,  swap:0,   commission:-0.08,tp:175,sl:188,comment:''},
+  ];
+
+  const all=[
+    ...today,
+    {id:'h6', pair:'XAUUSD',dir:'short',lots:0.5,exchange:'Exness',pnl:-22.50,pnlPct:-0.97,openTime:now-d-3*h,closeTime:now-d-1*h,  duration:2*h,  commission:-0.50,tp:0,sl:0},
+    {id:'h7', pair:'USDJPY', dir:'long', lots:1.0,exchange:'Exness',pnl:+31.00,pnlPct:+0.21,openTime:now-d-7*h,closeTime:now-d-5*h,  duration:2*h,  commission:-0.60,tp:0,sl:0},
+    {id:'h8', pair:'USTEC',  dir:'short',lots:0.2,exchange:'Exness',pnl:+45.00,pnlPct:+1.22,openTime:now-d-10*h,closeTime:now-d-8*h, duration:2*h,  commission:-0.30,tp:0,sl:0},
+    {id:'h9', pair:'XAUUSD', dir:'long', lots:1.0,exchange:'Exness',pnl:+88.00,pnlPct:+1.90,openTime:now-2*d-3*h,closeTime:now-2*d-1*h,duration:2*h,commission:-1.00,tp:0,sl:0},
+    {id:'h10',pair:'EURUSD', dir:'short',lots:2.0,exchange:'Exness',pnl:-35.00,pnlPct:-0.16,openTime:now-2*d-6*h,closeTime:now-2*d-4*h,duration:2*h,commission:-1.40,tp:0,sl:0},
+    {id:'h11',pair:'BTCUSDT',dir:'long', lots:0.1,exchange:'Binance',pnl:+120,pnlPct:+1.85,openTime:now-3*d-4*h,closeTime:now-3*d-2*h,duration:2*h,commission:-0.38,tp:0,sl:0},
+    {id:'h12',pair:'GBPUSD', dir:'short',lots:1.0,exchange:'Exness',pnl:+18.00,pnlPct:+0.14,openTime:now-3*d-8*h,closeTime:now-3*d-6*h,duration:2*h,commission:-0.60,tp:0,sl:0},
+    {id:'h13',pair:'XAUUSD', dir:'long', lots:0.5,exchange:'Exness',pnl:-15.00,pnlPct:-0.32,openTime:now-3*d-11*h,closeTime:now-3*d-9*h,duration:2*h,commission:-0.50,tp:0,sl:0},
+  ];
+
+  if(type==='open')  return open;
+  if(type==='today') return today;
+  return all;
+}
+
+// ── Formatters ──
+function fP(v,d=2){ return v!=null?Number(v).toFixed(d):'—'; }
+function fS(v){ if(v==null)return'—'; return (v>0?'+':v<0?'-':'')+'$'+Math.abs(v).toFixed(2); }
+function fSc(v){ return v>0?'up':v<0?'dn':''; }
+function fTime(ts,full=false){
+  if(!ts)return'—';
+  const d=new Date(ts);
+  const pad=n=>n.toString().padStart(2,'0');
+  const t=pad(d.getHours())+':'+pad(d.getMinutes());
+  if(!full) return t;
+  return d.getDate()+'.'+(d.getMonth()+1)+'.'+(d.getFullYear()%100)+' '+t;
+}
+function fDate(ts){
+  if(!ts)return'';
+  const d=new Date(ts), t=new Date(), y=new Date(t-86400000);
+  if(d.toDateString()===t.toDateString())return'Bugun';
+  if(d.toDateString()===y.toDateString())return'Kecha';
+  return d.getDate()+'.'+(d.getMonth()+1)+'.'+d.getFullYear();
+}
+function fDur(ms){
+  if(!ms||ms<0)return'—';
+  const m=Math.round(ms/60000);
+  if(m<60)return m+'d';
+  const h=Math.floor(m/60), rm=m%60;
+  if(h<24)return h+'s'+(rm?' '+rm+'d':'');
+  return Math.floor(h/24)+'k '+h%24+'s';
+}
+function timeSince(ts){
+  if(!ts)return'';
+  const m=Math.floor((Date.now()-ts)/60000);
+  if(m<1)return'hozir';if(m<60)return m+'d oldin';
+  const h=Math.floor(m/60);if(h<24)return h+'s oldin';
+  return Math.floor(h/24)+'k oldin';
+}
+function excColor(src){ return {binance:'#f0b90b',bitget:'#00c896',bybit:'#e6b800',exness:'#0099e6',myfxbook:'#4d9fff'}[src?.toLowerCase()]||'#888'; }
+
+// ── Panel ochish ──
+window.openPosPanel=function(type){
+  const panel=document.getElementById('posPanel');
+  const titleEl=document.getElementById('posPanelTitle');
+  const subEl=document.getElementById('posPanelSub');
+  const bodyEl=document.getElementById('posPanelBody');
+  const sumEl=document.getElementById('posPanelSummary');
+  const totEl=document.getElementById('posPanelTotal');
+  const metaEl=document.getElementById('posPanelMeta');
+  const cfg={open:{title:'Ochiq Pozitsiyalar',sub:'Hozir ochiq turgan barcha pozitsiyalar'},today:{title:'Bugungi Bitimlar',sub:'Bugun yopilgan pozitsiyalar'},all:{title:'Barcha Tarix',sub:"To'liq bitimlar tarixi · vaqt bo'yicha"}};
+  titleEl.textContent=cfg[type].title;
+  subEl.textContent=cfg[type].sub;
+
+  const pos=window._exchanges?.length
+    ?(type==='open'?window._exchanges.flatMap(e=>e.openPositions||[])
+      :type==='today'?window._exchanges.flatMap(e=>e.todayPositions||[])
+      :window._exchanges.flatMap(e=>e.history||[]))
+    :getPositionsData(type);
+
+  // Summary
+  const total=pos.reduce((s,p)=>s+(p.pnl||0),0);
+  const wins=pos.filter(p=>(p.pnl||0)>0).length;
+  const loss=pos.filter(p=>(p.pnl||0)<0).length;
+  if(pos.length){
+    sumEl.style.display='block';
+    totEl.textContent=fS(total); totEl.style.color=total>=0?'var(--green)':'var(--red)';
+    metaEl.innerHTML=`<span style="font-size:0.6rem;color:var(--muted2)">${pos.length} ta</span>`
+      +(type!=='open'?`<span style="font-size:0.6rem;color:var(--green)">✓ ${wins}</span><span style="font-size:0.6rem;color:var(--red)">✗ ${loss}</span>`:'');
+  }else sumEl.style.display='none';
+
+  if(!pos.length){
+    bodyEl.innerHTML=`<div class="pos-empty"><div class="pos-empty-ico">◈</div><div class="pos-empty-txt">${type==='open'?"Ochiq pozitsiya yo'q":type==='today'?"Bugun bitim yo'q":"Tarix bo'sh"}</div><div class="pos-empty-sub">Exchange ulanganidan so'ng ko'rinadi</div></div>`;
+    panel.classList.add('open'); return;
+  }
+
+  if(type==='open'){
+    bodyEl.innerHTML=`<div class="card" style="margin:8px 16px 0;overflow:hidden">`
+      +pos.map(p=>posSingleRow(p,type)).join('')+'</div>';
+  }else{
+    const sorted=[...pos].sort((a,b)=>(b.closeTime||0)-(a.closeTime||0));
+    let html='',last='';
+    sorted.forEach(p=>{
+      const dl=fDate(p.closeTime);
+      if(dl!==last){if(last)html+='</div>';html+=`<div class="time-sep">${dl}</div><div class="card" style="margin:8px 16px 0;overflow:hidden">`;last=dl;}
+      html+=posSingleRow(p,type);
+    });
+    if(last)html+='</div>';
+    bodyEl.innerHTML=html;
+  }
+  panel.classList.add('open');
+};
+
+function posSingleRow(p,type){
+  const isOpen=type==='open';
+  const clr=excColor(p.source||p.exchange);
+  return `<div class="pos-row" onclick="openPosDetail(${JSON.stringify(p).replace(/'/g,'&#39;')})">
+    <div class="pos-row-left">
+      <div class="pos-row-pair">
+        <span class="pos-dir ${p.dir}">${p.dir==='long'?'L':'S'}</span>
+        ${p.pair||'—'}
+        <span class="pos-exc-tag" style="color:${clr}">${p.exchange||''}</span>
+      </div>
+      <div class="pos-row-meta">
+        ${isOpen?timeSince(p.openTime):fTime(p.closeTime,false)}
+        ${p.lots?' · '+p.lots+' lot':''}
+        ${p.leverage?' · '+p.leverage:''}
+      </div>
+    </div>
+    <div class="pos-row-right">
+      <div class="pos-row-pnl ${fSc(p.pnl)}">${fS(p.pnl)}</div>
+      <div class="pos-row-sub">${p.pnlPct!=null?(p.pnlPct>0?'+':'')+fP(p.pnlPct)+'%':''}</div>
+    </div>
+  </div>`;
+}
+
+window.closePosPanel=function(){ document.getElementById('posPanel').classList.remove('open'); };
+
+// ── Pozitsiya detail sheet ──
+window.openPosDetail=function(pos){
+  if(typeof pos==='string') try{pos=JSON.parse(pos);}catch{return;}
+  const el=document.getElementById('posDetContent');
+  const isOpen=!pos.closeTime;
+  const clr=excColor(pos.source||pos.exchange);
+
+  // TP/SL progress (ochiq pozitsiya uchun)
+  let tpslHtml='';
+  if(isOpen && (pos.tp||pos.sl)){
+    const lo=Math.min(pos.sl||pos.openPrice,pos.openPrice);
+    const hi=Math.max(pos.tp||pos.openPrice,pos.openPrice);
+    const range=hi-lo||1;
+    const curPct=Math.max(0,Math.min(100,((pos.curPrice-lo)/range)*100));
+    const openPct=Math.max(0,Math.min(100,((pos.openPrice-lo)/range)*100));
+
+    tpslHtml=`
+    <div class="pdet-section">
+      <div class="pdet-sec-title">TP / SL</div>
+      ${pos.sl?`<div class="pdet-tpsl">
+        <div class="pdet-tpsl-row"><span class="pdet-tpsl-lbl">🔴 Stop Loss</span><span class="pdet-tpsl-val dn">${fP(pos.sl,pos.sl>100?2:5)}</span></div>
+        <div class="pdet-tpsl-row" style="margin-bottom:0"><span class="pdet-tpsl-lbl" style="font-size:0.58rem;color:var(--muted)">Risk</span><span style="font-size:0.68rem;color:var(--red);font-family:var(--mono)">${pos.openPrice&&pos.sl?'$'+Math.abs((pos.openPrice-pos.sl)*pos.lots*100).toFixed(2):'—'}</span></div>
+      </div>`:''}
+      ${pos.tp?`<div class="pdet-tpsl">
+        <div class="pdet-tpsl-row"><span class="pdet-tpsl-lbl">🟢 Take Profit</span><span class="pdet-tpsl-val up">${fP(pos.tp,pos.tp>100?2:5)}</span></div>
+        <div class="pdet-tpsl-row" style="margin-bottom:8px"><span class="pdet-tpsl-lbl" style="font-size:0.58rem;color:var(--muted)">Potensial foyda</span><span style="font-size:0.68rem;color:var(--green);font-family:var(--mono)">${pos.openPrice&&pos.tp?'+$'+Math.abs((pos.tp-pos.openPrice)*pos.lots*100).toFixed(2):'—'}</span></div>
+        <div class="pdet-bar-track"><div class="pdet-bar-fill" style="width:${curPct}%;background:${pos.pnl>=0?'var(--green)':'var(--red)'};"></div><div class="pdet-bar-cur" style="left:${openPct}%"></div></div>
+        <div style="display:flex;justify-content:space-between;margin-top:4px"><span style="font-size:0.5rem;color:var(--muted)">${pos.sl||'—'}</span><span style="font-size:0.5rem;color:var(--white)">▲ ${fP(pos.curPrice,pos.curPrice>100?2:5)}</span><span style="font-size:0.5rem;color:var(--muted)">${pos.tp||'—'}</span></div>
+      </div>`:''}
+    </div>`;
+  }
+
+  // Narxlar bo'limi
+  const priceFields=isOpen?[
+    {l:'Kirish narxi',  v:fP(pos.openPrice, pos.openPrice>100?2:5), cls:''},
+    {l:'Hozirgi narx',  v:fP(pos.curPrice,  pos.curPrice>100?2:5),  cls:fSc(pos.pnl)},
+    {l:'Farq (pips)',   v:pos.openPrice&&pos.curPrice?fP(Math.abs(pos.curPrice-pos.openPrice)*10000,1):'—', cls:''},
+  ]:[
+    {l:'Kirish narxi',  v:fP(pos.openPrice,  pos.openPrice>100?2:5),  cls:''},
+    {l:'Chiqish narxi', v:fP(pos.closePrice, pos.closePrice>100?2:5), cls:fSc(pos.pnl)},
+    {l:'Farq',          v:pos.openPrice&&pos.closePrice?fP(Math.abs(pos.closePrice-pos.openPrice)*10000,1):'—', cls:''},
+  ];
+
+  // Vaqt bo'limi
+  const timeFields=isOpen?[
+    {l:'Ochilgan vaqt', v:fTime(pos.openTime,true)},
+    {l:'Davomiylik',    v:timeSince(pos.openTime)},
+  ]:[
+    {l:'Ochilgan vaqt', v:fTime(pos.openTime,true)},
+    {l:'Yopilgan vaqt', v:fTime(pos.closeTime,true)},
+    {l:'Davomiylik',    v:fDur(pos.duration||(pos.closeTime&&pos.openTime?pos.closeTime-pos.openTime:null))},
+  ];
+
+  // Exchange-specific
+  const extraFields=[];
+  if(pos.swap!=null)         extraFields.push({l:'Swap',       v:fP(pos.swap,2),          cls:pos.swap<0?'dn':''});
+  if(pos.commission!=null)   extraFields.push({l:'Komissiya',  v:fP(pos.commission,2),     cls:'dn'});
+  if(pos.margin!=null)       extraFields.push({l:'Margin',     v:'$'+fP(pos.margin,2),     cls:''});
+  if(pos.leverage)           extraFields.push({l:'Leverage',   v:pos.leverage,             cls:'blue'});
+  if(pos.fundingRate!=null)  extraFields.push({l:'Funding',    v:fP(pos.fundingRate,4)+'%',cls:pos.fundingRate<0?'dn':'up'});
+  if(pos.unrealizedPnl!=null)extraFields.push({l:'Unrealized', v:fS(pos.unrealizedPnl),    cls:fSc(pos.unrealizedPnl)});
+  if(pos.comment)            extraFields.push({l:'Izoh',       v:pos.comment,              cls:'gold'});
+
+  function cells(arr){ return arr.map(f=>`<div class="pdet-cell"><div class="pdet-cell-l">${f.l}</div><div class="pdet-cell-v ${f.cls||''}">${f.v||'—'}</div></div>`).join(''); }
+
+  el.innerHTML=`
+    <!-- Header -->
+    <div class="pdet-hdr">
+      <div>
+        <div class="pdet-pair">${pos.pair||'—'}</div>
+        <div class="pdet-type">
+          <span class="pos-dir ${pos.dir}" style="margin-right:5px">${pos.dir==='long'?'LONG':'SHORT'}</span>
+          <span class="pdet-exc-badge" style="background:rgba(${hexRgbD(clr)},0.12);color:${clr};border:1px solid rgba(${hexRgbD(clr)},0.25)">${pos.exchange||''}</span>
+          ${pos.lots?`<span style="font-size:0.6rem;color:var(--muted2);margin-left:4px">${pos.lots} lot</span>`:''}
+        </div>
+      </div>
+      <div class="pdet-pnl-box">
+        <div class="pdet-pnl ${fSc(pos.pnl)}">${fS(pos.pnl)}</div>
+        ${pos.pnlPct!=null?`<div class="pdet-pnl-lbl ${fSc(pos.pnlPct)}" style="color:${pos.pnlPct>=0?'var(--green)':'var(--red)'}">${pos.pnlPct>0?'+':''}${fP(pos.pnlPct)}%</div>`:''}
+        <div class="pdet-pnl-lbl">${isOpen?'Float PnL':'Yopilgan PnL'}</div>
+      </div>
+    </div>
+
+    <!-- Narxlar -->
+    <div class="pdet-section">
+      <div class="pdet-sec-title">Narxlar</div>
+      <div class="pdet-grid-3">${cells(priceFields)}</div>
+    </div>
+
+    <!-- TP / SL -->
+    ${tpslHtml}
+
+    <!-- Vaqt -->
+    <div class="pdet-section">
+      <div class="pdet-sec-title">Vaqt</div>
+      <div class="pdet-grid">${cells(timeFields)}</div>
+    </div>
+
+    <!-- Qo'shimcha ma'lumotlar -->
+    ${extraFields.length?`<div class="pdet-section">
+      <div class="pdet-sec-title">Qo'shimcha · ${pos.source||pos.exchange||''}</div>
+      <div class="pdet-grid">${cells(extraFields)}</div>
+    </div>`:''}
+  `;
+
+  document.getElementById('posDetOv').classList.add('open');
+};
+
+function hexRgbD(h){const m=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(h);return m?parseInt(m[1],16)+','+parseInt(m[2],16)+','+parseInt(m[3],16):'128,128,128';}
+
+window.closePosDetail=function(){ document.getElementById('posDetOv').classList.remove('open'); };
+</script>
+
+</body>
+</html>
